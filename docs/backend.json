@@ -62,7 +62,7 @@
         },
         "dealershipId": {
           "type": "string",
-          "description": "Reference to Dealership. (Relationship: Dealership 1:N User)"
+          "description": "ID of the dealership this user belongs to."
         },
         "email": {
           "type": "string",
@@ -182,6 +182,22 @@
   "firestore": {
     "structure": [
       {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles with their associated dealership ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user, matches auth UID."
+            }
+          ]
+        }
+      },
+      {
         "path": "/dealerships/{dealershipId}",
         "definition": {
           "entityName": "Dealership",
@@ -198,33 +214,13 @@
         }
       },
       {
-        "path": "/dealerships/{dealershipId}/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles associated with a dealership. Includes denormalized 'dealershipId' for authorization independence.",
-          "params": [
-            {
-              "name": "dealershipId",
-              "description": "Unique identifier for the dealership."
-            },
-            {
-              "name": "userId",
-              "description": "Unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
         "path": "/dealerships/{dealershipId}/vehicles/{vehicleId}",
         "definition": {
           "entityName": "Vehicle",
           "schema": {
             "$ref": "#/backend/entities/Vehicle"
           },
-          "description": "Stores vehicle information for a dealership. Includes denormalized 'dealershipId' for authorization independence.",
+          "description": "Stores vehicle information for a dealership.",
           "params": [
             {
               "name": "dealershipId",
@@ -261,7 +257,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed for a SaaS application focused on vehicle dealerships, emphasizing ease of use, scalability, and robust security rules. The design prioritizes Authorization Independence, enabling atomic operations and straightforward debugging. It incorporates Structural Segregation to maintain a homogeneous security posture within each collection, and Access Modeling for consistency in authorization patterns. Data clarity is achieved through explicit state modeling and predictable schemas.\n\n**Authorization Independence:** Dealership ID is denormalized into the User and Vehicle collections, eliminating the need for `get()` calls in security rules to verify dealership ownership. This ensures that user and vehicle data can be created and managed independently without relying on parent document reads.\n\n**QAPs Support:** The structure supports secure `list` operations by segregating data based on ownership. Access to user and vehicle data is controlled through path-based rules (`/dealerships/{dealershipId}/users/{userId}` and `/dealerships/{dealershipId}/vehicles/{vehicleId}`), ensuring that users can only list and access resources within their dealership.\n\n**Dealerships Collection:** Stores dealership profile information, accessible to admins and potentially publicly readable for catalog display purposes.\n\n**Users Collection:** Located under each dealership (`/dealerships/{dealershipId}/users/{userId}`). Contains user profiles, including role information. This allows for easy management of users and their roles within a specific dealership. User IDs are used for authentication.\n\n**Vehicles Collection:** Located under each dealership (`/dealerships/{dealershipId}/vehicles/{vehicleId}`). Stores vehicle information, including status (available, sold, unavailable). The `dealershipId` field ensures that vehicles are associated with the correct dealership. The `status` field supports filtering vehicles for the public catalog.\n\n**AiContent Collection:** Located under each vehicle (`/dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId}`). Stores the AI-generated content related to the vehicle, such as social media captions and visual post suggestions. This structure keeps AI content directly associated with the relevant vehicle."
+    ]
   }
 }

@@ -1,9 +1,14 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useUser, useAuth } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Car, Home, LineChart, Menu, Package, Search, Settings, ShoppingCart, Users } from "lucide-react";
+import { Car, Menu, Search, Settings } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 
@@ -12,6 +17,29 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleSignOut = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
@@ -97,8 +125,8 @@ export default function DashboardLayout({
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                  <AvatarImage src="https://picsum.photos/seed/avatar/40/40" alt="Avatar" />
-                  <AvatarFallback>RD</AvatarFallback>
+                  <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`} alt="Avatar" />
+                  <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
@@ -109,13 +137,13 @@ export default function DashboardLayout({
               <DropdownMenuItem>Configurações</DropdownMenuItem>
               <DropdownMenuItem>Suporte</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link href="/login">Sair</Link>
+              <DropdownMenuItem onClick={handleSignOut}>
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-secondary/50">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
           {children}
         </main>
       </div>

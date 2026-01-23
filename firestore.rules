@@ -1,155 +1,46 @@
-/**
- * Core Philosophy: This ruleset enforces a multi-tenant security model where each "Dealership"
- * is a distinct tenant. All data, including users and vehicles, is strictly siloed within a
- * dealership's data tree. The primary authorization mechanism relies on a custom claim (`dealershipId`)
- * embedded in the user's authentication token, which is the industry best practice for scalable,
- * secure multi-tenant applications.
- *
- * Data Structure: All application data is nested under the top-level `/dealerships/{dealershipId}`
- * collection. This hierarchical structure ensures that all security rules can easily and
- * performantly reference the dealership context from the document path.
- *
- * Key Security Decisions:
- * - Dealership Membership is Authoritative: A user's access is determined by the `dealershipId`
- *   custom claim on their auth token. This prevents a user from one dealership from accessing
- *   another's data, even if they guess the document IDs.
- * - Public Catalogs: Dealership profiles and their vehicle lists are publicly readable to support
- *   the public-facing catalog feature. Client-side code is responsible for filtering vehicles
- *   by status (e.g., 'available').
- * - Internal Data Protection: User information and AI-generated content are considered internal
- *   and are only accessible to authenticated members of the corresponding dealership.
- * - Flexible Writes: In alignment with the prototyping philosophy, these rules do not enforce
- *   a strict data schema on writes. However, they strictly validate relational identifiers
- *   (like `dealershipId` and `id`) to ensure data integrity and prevent resources from being
- *   moved between dealerships.
- *
- * Denormalization for Authorization: The `dealershipId` is denormalized into `User` and `Vehicle`
- * documents. The rules validate on write operations that this denormalized ID matches the ID in
- * the document path, ensuring data consistency and simplifying security logic.
- *
- * Structural Segregation: The top-level `/dealerships` collection provides a natural and secure
- * segregation of data for each tenant, simplifying queries and security rules.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ----------------------------------------------------------------
-    // Helper Functions
-    // ----------------------------------------------------------------
-
-    /**
-     * Checks if a user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Retrieves the dealership ID from the user's custom auth token.
-     * CRITICAL: For these rules to work, you MUST set a custom claim named
-     * 'dealershipId' on the user's auth token upon login or registration.
-     * Example: admin.auth().setCustomUserClaims(uid, { dealershipId: 'some-dealership-id' });
-     */
-    function userDealershipId() {
-      return request.auth.token.dealershipId;
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isOwner(userId) {
+        return request.auth.uid == userId;
     }
 
-    /**
-     * Checks if the currently authenticated user is a member of the specified dealership.
-     */
-    function isMemberOfDealership(dealershipId) {
-      return isSignedIn() && userDealershipId() == dealershipId;
+    // Users can read/update their own user document.
+    match /users/{userId} {
+      allow read, update: if isSignedIn() && isOwner(userId);
+      // Create happens in a secure context (signup function).
+      allow create: if isSignedIn();
+      allow list, delete: if false;
     }
-
-    /**
-     * Checks if a document exists and the user is a member of the specified dealership.
-     * Used for safe update and delete operations.
-     */
-    function isExistingMemberOfDealership(dealershipId) {
-      return isMemberOfDealership(dealershipId) && resource != null;
-    }
-
-    /**
-     * Validates that the dealershipId in a new document's body matches the
-     * dealershipId from the document path. Enforces relational integrity on creation.
-     */
-    function hasCorrectDealershipId(dealershipId) {
-      return request.resource.data.dealershipId == dealershipId;
-    }
-
-    /**
-     * Validates that the dealershipId field cannot be changed on an update.
-     */
-    function dealershipIdIsImmutable() {
-      return request.resource.data.dealershipId == resource.data.dealershipId;
-    }
-
-    // ----------------------------------------------------------------
-    // Collection Rules
-    // ----------------------------------------------------------------
-
-    /**
-     * @description Manages Dealership profiles. Profiles are public for catalog generation,
-     * but only authenticated members of that dealership can modify them.
-     * @path /dealerships/{dealershipId}
-     * @allow (get) Any user, authenticated or not, can read a dealership's public profile.
-     * @deny (update) An authenticated user from 'dealership-B' attempting to update the profile for 'dealership-A'.
-     * @principle Public read access for general info, with writes restricted to tenant members.
-     */
+    
+    // Dealerships can be read publicly (for catalog).
+    // Writes are only allowed by users belonging to that dealership.
     match /dealerships/{dealershipId} {
-      allow get, list: if true;
-      allow create: if isMemberOfDealership(dealershipId) && request.resource.data.id == dealershipId;
-      allow update: if isExistingMemberOfDealership(dealershipId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingMemberOfDealership(dealershipId);
+      allow get: if true;
+      allow list: if true; // For public catalogs
+      allow write: if isSignedIn() && getUserData().dealershipId == dealershipId;
     }
-
-    /**
-     * @description Manages user profiles within a specific dealership. Users can only be
-     * accessed and managed by other members of the same dealership.
-     * @path /dealerships/{dealershipId}/users/{userId}
-     * @allow (list) A user from 'dealership-A' can list all other users within 'dealership-A'.
-     * @deny (get) A user from 'dealership-B' cannot read a user profile from 'dealership-A'.
-     * @deny (create) A user cannot create a new user profile in a dealership they don't belong to.
-     * @principle Restricts access to a dealership's own data tree, preventing cross-tenant data leakage.
-     */
-    match /dealerships/{dealershipId}/users/{userId} {
-      allow get, list: if isMemberOfDealership(dealershipId);
-      allow create: if isMemberOfDealership(dealershipId) && hasCorrectDealershipId(dealershipId) && request.resource.data.id == userId;
-      allow update: if isExistingMemberOfDealership(dealershipId) && dealershipIdIsImmutable() && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingMemberOfDealership(dealershipId);
+    
+    // All subcollections under a dealership follow the same rule, but can be overridden.
+    match /dealerships/{dealershipId}/{path=**} {
+       allow read, write: if isSignedIn() && getUserData().dealershipId == dealershipId;
     }
-
-    /**
-     * @description Manages the vehicle inventory for a dealership. Vehicle data is public to
-     * support the public catalog, but only members of the dealership can create or modify inventory.
-     * @path /dealerships/{dealershipId}/vehicles/{vehicleId}
-     * @allow (list) Any user, including anonymous ones, can list vehicles for 'dealership-A's public catalog.
-     * @deny (create) An authenticated user from 'dealership-B' cannot add a vehicle to 'dealership-A's inventory.
-     * @deny (update) An anonymous user cannot change the price of a vehicle.
-     * @principle Enforces public read access for catalog data while securing all write operations to tenant members.
-     */
+    
+     // Override for public vehicle catalog
     match /dealerships/{dealershipId}/vehicles/{vehicleId} {
-      allow get, list: if true;
-      allow create: if isMemberOfDealership(dealershipId) && hasCorrectDealershipId(dealershipId);
-      allow update: if isExistingMemberOfDealership(dealershipId) && dealershipIdIsImmutable();
-      allow delete: if isExistingMemberOfDealership(dealershipId);
-    }
-
-    /**
-     * @description Manages AI-generated content for a specific vehicle. This content is
-     * considered internal and is only accessible to members of the parent dealership.
-     * @path /dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId}
-     * @allow (get) A user from 'dealership-A' can read the AI content for a vehicle in their inventory.
-     * @deny (list) A public, unauthenticated user cannot list the AI content for any vehicle.
-     * @deny (create) A user from 'dealership-B' cannot generate AI content for a vehicle in 'dealership-A'.
-     * @principle Secures derived or internal data by inheriting permissions from its parent resource's context.
-     */
-    match /dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId} {
-      allow get, list: if isMemberOfDealership(dealershipId);
-      allow create: if isMemberOfDealership(dealershipId);
-      allow update: if isExistingMemberOfDealership(dealershipId);
-      allow delete: if isExistingMemberOfDealership(dealershipId);
+      allow get: if true;
+      allow list: if true; // Public can list vehicles for catalog
+      // Writes are restricted to dealership members
+      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == dealershipId;
     }
   }
 }
