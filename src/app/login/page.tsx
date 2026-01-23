@@ -40,6 +40,11 @@ export default function LoginPage() {
       if (error.code === 'auth/user-not-found' && email === 'pedrotebarrot08@gmail.com') {
          // As per requirement, create the user if it doesn't exist.
         try {
+            if (password.length < 6) {
+                toast({ title: 'Senha muito curta', description: 'A senha de teste deve ter pelo menos 6 caracteres.', variant: 'destructive' });
+                setIsLoading(false);
+                return;
+            }
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
 
@@ -59,12 +64,12 @@ export default function LoginPage() {
             });
             // Let the useEffect handle redirect
         } catch (signupError: any) {
-            toast({ title: 'Erro ao criar usuário', description: signupError.message, variant: 'destructive' });
+            toast({ title: 'Erro ao criar usuário de teste', description: signupError.message, variant: 'destructive' });
         }
       } else {
         toast({
             title: 'Erro de Autenticação',
-            description: 'Verifique seu e-mail e senha.',
+            description: error.message || 'Verifique seu e-mail e senha.',
             variant: 'destructive',
         });
       }
