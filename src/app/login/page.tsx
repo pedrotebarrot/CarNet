@@ -11,7 +11,7 @@ import { Logo } from '@/components/logo';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, collection } from 'firebase/firestore';
 
 
 export default function LoginPage() {
@@ -35,41 +35,53 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The useEffect will handle the redirect
+      // The useEffect will handle the redirect on success
     } catch (error: any) {
+      // Special handling for the test user if they don't exist
       if (error.code === 'auth/user-not-found' && email === 'pedrotebarrot08@gmail.com') {
-         // As per requirement, create the user if it doesn't exist.
         try {
-            if (password.length < 6) {
-                toast({ title: 'Senha muito curta', description: 'A senha de teste deve ter pelo menos 6 caracteres.', variant: 'destructive' });
-                setIsLoading(false);
-                return;
-            }
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const newUser = userCredential.user;
+          if (password.length < 6) {
+            toast({ title: 'Senha muito curta', description: 'A senha de teste deve ter pelo menos 6 caracteres.', variant: 'destructive' });
+            setIsLoading(false);
+            return;
+          }
 
-            const dealershipRef = await addDoc(collection(firestore, 'dealerships'), {
-                name: 'Tebarrot Veículos',
-                createdAt: new Date(),
-            });
-            const dealershipId = dealershipRef.id;
-            
-            await setDoc(doc(firestore, 'dealerships', dealershipId), { id: dealershipId, name: 'Tebarrot Veículos' }, { merge: true });
+          // 1. Create user
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const newUser = userCredential.user;
 
-            await setDoc(doc(firestore, 'users', newUser.uid), {
-                id: newUser.uid,
-                email: newUser.email,
-                dealershipId: dealershipId,
-                role: 'admin',
-            });
-            // Let the useEffect handle redirect
+          // 2. Create dealership
+          const dealershipRef = doc(collection(firestore, 'dealerships'));
+          await setDoc(dealershipRef, {
+            id: dealershipRef.id,
+            name: 'Tebarrot Veículos',
+            createdAt: new Date(),
+          });
+          
+          // 3. Create user profile doc
+          await setDoc(doc(firestore, 'users', newUser.uid), {
+            id: newUser.uid,
+            email: newUser.email,
+            dealershipId: dealershipRef.id,
+            role: 'admin',
+          });
+
+          // After successful creation, the onAuthStateChanged listener will handle the redirect.
         } catch (signupError: any) {
-            toast({ title: 'Erro ao criar usuário de teste', description: signupError.message, variant: 'destructive' });
+          toast({ title: 'Erro ao criar usuário de teste', description: signupError.message, variant: 'destructive' });
         }
       } else {
+        // Handle all other errors, including 'auth/invalid-credential' for any user
+        let description = 'Verifique seu e-mail e senha.';
+        if (error.code === 'auth/invalid-credential') {
+          description = 'A senha informada está incorreta. Tente novamente.';
+        } else if (error.message) {
+          description = error.message;
+        }
+        
         toast({
             title: 'Erro de Autenticação',
-            description: error.message || 'Verifique seu e-mail e senha.',
+            description: description,
             variant: 'destructive',
         });
       }
