@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "car1",
+      "description": "White sedan front view",
+      "imageUrl": "https://images.unsplash.com/photo-1669254406472-506b77b64633?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3aGl0ZSUyMHNlZGFufGVufDB8fHx8MTc2OTExMjc0Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "white sedan"
+    },
+    {
+      "id": "car2",
+      "description": "Red sports car side view",
+      "imageUrl": "https://images.unsplash.com/photo-1696581081901-f8e0f10713b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxyZWQlMjBzcG9ydHNjYXJ8ZW58MHx8fHwxNzY5MTIyOTUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "red sportscar"
+    },
+    {
+      "id": "car3",
+      "description": "Black SUV in a city",
+      "imageUrl": "https://images.unsplash.com/photo-1700769670024-babe7f0bf29a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxibGFjayUyMHN1dnxlbnwwfHx8fDE3NjkwNzc2NDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "black suv"
+    },
+    {
+      "id": "car4",
+      "description": "Blue hatchback",
+      "imageUrl": "https://images.unsplash.com/photo-1640168822496-7948668a7988?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxibHVlJTIwaGF0Y2hiYWNrfGVufDB8fHx8MTc2OTEyNzQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "blue hatchback"
+    },
+    {
+      "id": "car5",
+      "description": "Silver pickup truck",
+      "imageUrl": "https://images.unsplash.com/photo-1642531406277-33bc9531e33e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzaWx2ZXIlMjB0cnVja3xlbnwwfHx8fDE3NjkxMjc0NDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "silver truck"
+    },
+    {
+      "id": "car6",
+      "description": "Gray compact car",
+      "imageUrl": "https://images.unsplash.com/photo-1618264366428-c33cf2284ce4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxncmF5JTIwY2FyfGVufDB8fHx8MTc2OTEyNzQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gray car"
+    },
+    {
+      "id": "car7",
+      "description": "Vintage yellow car",
+      "imageUrl": "https://images.unsplash.com/photo-1549458395-e14f2e6d39c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx5ZWxsb3clMjBjYXJ8ZW58MHx8fHwxNzY5MTEyNzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "yellow car"
+    },
+    {
+      "id": "car8",
+      "description": "Dark green modern sedan",
+      "imageUrl": "https://images.unsplash.com/photo-1762088209435-2cef76c1e980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxncmVlbiUyMHNlZGFufGVufDB8fHx8MTc2OTEyNzQ0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "green sedan"
+    }
+  ]
 }
