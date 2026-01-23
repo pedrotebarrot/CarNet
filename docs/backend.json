@@ -1,0 +1,267 @@
+{
+  "entities": {
+    "Dealership": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Dealership",
+      "type": "object",
+      "description": "Represents a vehicle dealership.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the dealership."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the dealership."
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the dealership."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the dealership."
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "The WhatsApp number of the dealership."
+        },
+        "instagramLink": {
+          "type": "string",
+          "description": "Link to the dealership's Instagram profile.",
+          "format": "uri"
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the dealership's logo image.",
+          "format": "uri"
+        },
+        "primaryColor": {
+          "type": "string",
+          "description": "The dealership's primary color (e.g., hex code)."
+        },
+        "subdomain": {
+          "type": "string",
+          "description": "The subdomain for the dealership's public catalog."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account associated with a dealership.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "dealershipId": {
+          "type": "string",
+          "description": "Reference to Dealership. (Relationship: Dealership 1:N User)"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role within the dealership (e.g., admin, employee)."
+        }
+      },
+      "required": [
+        "id",
+        "dealershipId",
+        "email"
+      ]
+    },
+    "Vehicle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vehicle",
+      "type": "object",
+      "description": "Represents a vehicle in the dealership's inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the vehicle."
+        },
+        "dealershipId": {
+          "type": "string",
+          "description": "Reference to Dealership. (Relationship: Dealership 1:N Vehicle)"
+        },
+        "make": {
+          "type": "string",
+          "description": "The make of the vehicle (e.g., Toyota)."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model of the vehicle (e.g., Camry)."
+        },
+        "year": {
+          "type": "number",
+          "description": "The year the vehicle was manufactured."
+        },
+        "mileage": {
+          "type": "number",
+          "description": "The vehicle's mileage."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the vehicle."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the vehicle."
+        },
+        "status": {
+          "type": "string",
+          "description": "The vehicle's status (available, sold, unavailable)."
+        },
+        "imageUrl": {
+          "type": "array",
+          "description": "Array of URLs of images for this vehicle.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internalNotes": {
+          "type": "string",
+          "description": "Internal notes about the vehicle."
+        }
+      },
+      "required": [
+        "id",
+        "dealershipId",
+        "make",
+        "model",
+        "year",
+        "price",
+        "status"
+      ]
+    },
+    "AiContent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AiContent",
+      "type": "object",
+      "description": "Represents the AI generated content for a vehicle.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AI content."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to Vehicle. (Relationship: Vehicle 1:1 AiContent)"
+        },
+        "socialMediaCaption": {
+          "type": "string",
+          "description": "AI-generated caption for social media."
+        },
+        "visualPostSuggestion": {
+          "type": "string",
+          "description": "AI-generated suggestion for a visual post (e.g., template name)."
+        }
+      },
+      "required": [
+        "id",
+        "vehicleId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/dealerships/{dealershipId}",
+        "definition": {
+          "entityName": "Dealership",
+          "schema": {
+            "$ref": "#/backend/entities/Dealership"
+          },
+          "description": "Stores dealership profile information.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles associated with a dealership. Includes denormalized 'dealershipId' for authorization independence.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            },
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": {
+            "$ref": "#/backend/entities/Vehicle"
+          },
+          "description": "Stores vehicle information for a dealership. Includes denormalized 'dealershipId' for authorization independence.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId}",
+        "definition": {
+          "entityName": "AiContent",
+          "schema": {
+            "$ref": "#/backend/entities/AiContent"
+          },
+          "description": "Stores AI-generated content for a specific vehicle.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            },
+            {
+              "name": "aiContentId",
+              "description": "Unique identifier for the AI content."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed for a SaaS application focused on vehicle dealerships, emphasizing ease of use, scalability, and robust security rules. The design prioritizes Authorization Independence, enabling atomic operations and straightforward debugging. It incorporates Structural Segregation to maintain a homogeneous security posture within each collection, and Access Modeling for consistency in authorization patterns. Data clarity is achieved through explicit state modeling and predictable schemas.\n\n**Authorization Independence:** Dealership ID is denormalized into the User and Vehicle collections, eliminating the need for `get()` calls in security rules to verify dealership ownership. This ensures that user and vehicle data can be created and managed independently without relying on parent document reads.\n\n**QAPs Support:** The structure supports secure `list` operations by segregating data based on ownership. Access to user and vehicle data is controlled through path-based rules (`/dealerships/{dealershipId}/users/{userId}` and `/dealerships/{dealershipId}/vehicles/{vehicleId}`), ensuring that users can only list and access resources within their dealership.\n\n**Dealerships Collection:** Stores dealership profile information, accessible to admins and potentially publicly readable for catalog display purposes.\n\n**Users Collection:** Located under each dealership (`/dealerships/{dealershipId}/users/{userId}`). Contains user profiles, including role information. This allows for easy management of users and their roles within a specific dealership. User IDs are used for authentication.\n\n**Vehicles Collection:** Located under each dealership (`/dealerships/{dealershipId}/vehicles/{vehicleId}`). Stores vehicle information, including status (available, sold, unavailable). The `dealershipId` field ensures that vehicles are associated with the correct dealership. The `status` field supports filtering vehicles for the public catalog.\n\n**AiContent Collection:** Located under each vehicle (`/dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId}`). Stores the AI-generated content related to the vehicle, such as social media captions and visual post suggestions. This structure keeps AI content directly associated with the relevant vehicle."
+  }
+}
