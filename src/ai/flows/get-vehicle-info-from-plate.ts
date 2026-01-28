@@ -30,6 +30,7 @@ const MOCK_PLATE_DB: Record<string, Omit<GetVehicleInfoFromPlateOutput, 'plate'>
     'ABC1234': { make: 'Chevrolet', model: 'Onix', year: 2022 },
     'XYZ5678': { make: 'Ford', model: 'Mustang', year: 2020 },
     'JKL4321': { make: 'Honda', model: 'Civic', year: 2019 },
+    'GDV2F53': { make: 'Hyundai', model: 'Creta', year: 2023 },
 };
 
 
