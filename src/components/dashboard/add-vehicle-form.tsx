@@ -84,7 +84,7 @@ export function AddVehicleForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Modelo</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedMake}>
+                <Select onValueChange={field.onChange} value={field.value || ''} disabled={!selectedMake}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o modelo" />
@@ -136,7 +136,18 @@ export function AddVehicleForm() {
               <FormItem>
                 <FormLabel>Quilometragem</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="ex: 15000" {...field} />
+                  <Input
+                    placeholder="ex: 15.000 km"
+                    value={
+                      field.value > 0
+                        ? `${new Intl.NumberFormat('pt-BR').format(field.value)} km`
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '');
+                      field.onChange(rawValue ? parseInt(rawValue, 10) : 0);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
