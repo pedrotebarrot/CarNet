@@ -94,6 +94,10 @@
           "type": "string",
           "description": "Reference to Dealership. (Relationship: Dealership 1:N Vehicle)"
         },
+        "plate": {
+          "type": "string",
+          "description": "The license plate of the vehicle."
+        },
         "make": {
           "type": "string",
           "description": "The make of the vehicle (e.g., Toyota)."
@@ -137,6 +141,7 @@
       "required": [
         "id",
         "dealershipId",
+        "plate",
         "make",
         "model",
         "year",

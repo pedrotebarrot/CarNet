@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Calendar, Gauge, DollarSign, Tag, FileText } from "lucide-react";
+import { ChevronLeft, Calendar, Gauge, DollarSign, Tag, FileText, Fingerprint } from "lucide-react";
 import { vehicles, type Vehicle } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,6 +103,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                     <VehicleStat icon={<Gauge size={24}/>} label="Quilometragem" value={`${new Intl.NumberFormat('pt-BR').format(vehicle.mileage)} km`} />
                     <VehicleStat icon={<Calendar size={24}/>} label="Ano" value={vehicle.year} />
                     <VehicleStat icon={<Tag size={24}/>} label="Marca / Modelo" value={`${vehicle.make} ${vehicle.model}`} />
+                    <VehicleStat icon={<Fingerprint size={24}/>} label="Placa" value={vehicle.plate} />
                 </CardContent>
             </Card>
 

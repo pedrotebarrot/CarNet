@@ -1,5 +1,6 @@
 export type Vehicle = {
   id: string;
+  plate: string;
   make: string;
   model: string;
   year: number;
@@ -14,6 +15,7 @@ export type Vehicle = {
 export const vehicles: Vehicle[] = [
   {
     id: '1',
+    plate: 'BRA2E19',
     make: 'Volkswagen',
     model: 'Golf',
     year: 2021,
@@ -26,6 +28,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '2',
+    plate: 'ABC1234',
     make: 'Chevrolet',
     model: 'Onix',
     year: 2022,
@@ -38,6 +41,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '3',
+    plate: 'XYZ5678',
     make: 'Ford',
     model: 'Mustang',
     year: 2020,
@@ -50,6 +54,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '4',
+    plate: 'JKL4321',
     make: 'Honda',
     model: 'Civic',
     year: 2019,
@@ -62,6 +67,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '5',
+    plate: 'MNO9876',
     make: 'Toyota',
     model: 'Corolla',
     year: 2023,
@@ -74,6 +80,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '6',
+    plate: 'PQR6543',
     make: 'Fiat',
     model: 'Toro',
     year: 2018,
@@ -86,6 +93,7 @@ export const vehicles: Vehicle[] = [
   },
   {
     id: '7',
+    plate: 'STU3210',
     make: 'Jeep',
     model: 'Renegade',
     year: 2022,
