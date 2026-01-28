@@ -110,6 +110,18 @@
           "type": "number",
           "description": "The year the vehicle was manufactured."
         },
+        "modelYear": {
+          "type": "number",
+          "description": "The model year of the vehicle."
+        },
+        "engine": {
+          "type": "string",
+          "description": "The engine specification (e.g., 1.6, 2.0 Turbo)."
+        },
+        "version": {
+          "type": "string",
+          "description": "The specific version or trim of the model."
+        },
         "mileage": {
           "type": "number",
           "description": "The vehicle's mileage."

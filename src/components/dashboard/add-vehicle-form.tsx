@@ -13,14 +13,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { vehicleMakes, vehicleModels, getYears, VehicleMake } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(7, { message: 'A placa deve ter 7 caracteres.' }),
   make: z.string().min(1, { message: 'Selecione uma marca.' }),
   model: z.string().min(1, { message: 'Selecione um modelo.' }),
-  year: z.string().min(4, { message: 'Selecione um ano.' }),
+  year: z.string().min(4, { message: 'Selecione o ano de fabricação.' }),
+  modelYear: z.string().min(4, { message: 'Selecione o ano do modelo.' }),
+  engine: z.string().min(1, { message: 'Descreva o motor.' }),
+  version: z.string().min(1, { message: 'Descreva a versão.' }),
   mileage: z.coerce.number().min(0, { message: 'A quilometragem deve ser um número positivo.' }),
   price: z.coerce.number().min(1, { message: 'O preço deve ser maior que zero.' }),
   description: z.string().optional(),
@@ -40,6 +43,12 @@ export function AddVehicleForm() {
       mileage: 0,
       price: 0,
       plate: '',
+      make: '',
+      model: '',
+      year: '',
+      modelYear: '',
+      engine: '',
+      version: '',
     },
   });
 
@@ -51,28 +60,29 @@ export function AddVehicleForm() {
   }, [selectedMake, form]);
 
   const handlePlateLookup = async () => {
-    if (plateValue.length < 7) {
-        form.setError('plate', { message: 'A placa deve ter 7 caracteres.' });
-        return;
-    }
+    if (plateValue.length < 7) return;
+
     setIsPlateLoading(true);
+    form.clearErrors('plate');
     try {
         const result = await getVehicleInfoFromPlate({ plate: plateValue });
         if (result) {
-            form.setValue('make', result.make);
-            // We need to trigger a re-render or wait for the models to be available
-            // A slight delay allows the UI to update with the new make
+            form.setValue('make', result.make, { shouldValidate: true });
+            // Timeout to allow the dependent 'model' field to populate before setting its value
             setTimeout(() => {
-                form.setValue('model', result.model);
+                form.setValue('model', result.model, { shouldValidate: true });
             }, 100);
-            form.setValue('year', result.year.toString());
-            toast({ title: "Veículo encontrado!", description: "Os dados foram preenchidos." });
+            form.setValue('year', result.year.toString(), { shouldValidate: true });
+            form.setValue('modelYear', result.modelYear.toString(), { shouldValidate: true });
+            form.setValue('engine', result.engine, { shouldValidate: true });
+            form.setValue('version', result.version, { shouldValidate: true });
+            toast({ title: "Veículo encontrado!", description: "Os dados foram preenchidos automaticamente." });
         } else {
-            toast({ title: "Placa não encontrada", description: "Nenhum veículo encontrado para esta placa. Preencha os dados manualmente.", variant: "destructive" });
+            toast({ title: "Placa não encontrada", description: "Preencha os dados manualmente.", variant: "destructive" });
         }
     } catch (error) {
         console.error("Plate lookup failed", error);
-        toast({ title: "Erro na consulta", description: "Não foi possível consultar a placa.", variant: "destructive" });
+        toast({ title: "Erro na consulta", description: "Não foi possível consultar a placa. Tente novamente.", variant: "destructive" });
     } finally {
         setIsPlateLoading(false);
     }
@@ -96,14 +106,20 @@ export function AddVehicleForm() {
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Placa do Veículo</FormLabel>
-                    <div className="flex gap-2">
+                    <div className="relative">
                         <FormControl>
-                            <Input placeholder="ABC1234" {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
+                            <Input 
+                                placeholder="ABC1D23" 
+                                {...field} 
+                                onBlur={handlePlateLookup} 
+                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                             />
                         </FormControl>
-                        <Button type="button" variant="secondary" onClick={handlePlateLookup} disabled={isPlateLoading || plateValue.length < 7}>
-                            {isPlateLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                            <span className="sr-only">Buscar Placa</span>
-                        </Button>
+                        {isPlateLoading && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                        )}
                     </div>
                     <FormMessage />
                 </FormItem>
@@ -161,17 +177,31 @@ export function AddVehicleForm() {
           />
         </div>
 
+        <FormField
+            control={form.control}
+            name="version"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Versão</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Ex: Highline, LTZ, Sport" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="year"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ano</FormLabel>
+                <FormLabel>Ano Fabricação</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o ano" />
+                      <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -186,31 +216,72 @@ export function AddVehicleForm() {
               </FormItem>
             )}
           />
-          <FormField
+           <FormField
             control={form.control}
-            name="mileage"
+            name="modelYear"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quilometragem</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="ex: 15.000 km"
-                    value={
-                      field.value > 0
-                        ? `${new Intl.NumberFormat('pt-BR').format(field.value)} km`
-                        : ''
-                    }
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/\D/g, '');
-                      field.onChange(rawValue ? parseInt(rawValue, 10) : 0);
-                    }}
-                  />
-                </FormControl>
+                <FormLabel>Ano Modelo</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+             <FormField
+                control={form.control}
+                name="engine"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Motor</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Ex: 1.0 Turbo, 2.0 Flex" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="mileage"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Quilometragem</FormLabel>
+                    <FormControl>
+                    <Input
+                        placeholder="Ex: 15.000"
+                        value={
+                        field.value > 0
+                            ? new Intl.NumberFormat('pt-BR').format(field.value)
+                            : ''
+                        }
+                        onChange={(e) => {
+                        const rawValue = e.target.value.replace(/\D/g, '');
+                        field.onChange(rawValue ? parseInt(rawValue, 10) : 0);
+                        }}
+                    />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
+
 
         <FormField
           control={form.control}
@@ -226,9 +297,9 @@ export function AddVehicleForm() {
                       ? new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        }).format(field.value)
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(field.value / 100)
                       : ''
                   }
                   onChange={(e) => {

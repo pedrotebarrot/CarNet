@@ -19,18 +19,21 @@ export type GetVehicleInfoFromPlateInput = z.infer<typeof GetVehicleInfoFromPlat
 const GetVehicleInfoFromPlateOutputSchema = z.object({
   make: z.string().describe('The make of the vehicle.'),
   model: z.string().describe('The model of the vehicle.'),
-  year: z.number().describe('The year of the vehicle.'),
+  year: z.number().describe('The manufacturing year of the vehicle.'),
+  modelYear: z.number().describe('The model year of the vehicle.'),
+  engine: z.string().describe('The engine specification of the vehicle.'),
+  version: z.string().describe('The version or trim of the vehicle.'),
 });
 export type GetVehicleInfoFromPlateOutput = z.infer<typeof GetVehicleInfoFromPlateOutputSchema>;
 
 // This is a mock database. In a real application, you would query a database
 // or an external API to get this information.
 const MOCK_PLATE_DB: Record<string, Omit<GetVehicleInfoFromPlateOutput, 'plate'>> = {
-    'BRA2E19': { make: 'Volkswagen', model: 'Golf', year: 2021 },
-    'ABC1234': { make: 'Chevrolet', model: 'Onix', year: 2022 },
-    'XYZ5678': { make: 'Ford', model: 'Mustang', year: 2020 },
-    'JKL4321': { make: 'Honda', model: 'Civic', year: 2019 },
-    'GDV2F53': { make: 'Hyundai', model: 'Creta', year: 2023 },
+    'BRA2E19': { make: 'Volkswagen', model: 'Golf', year: 2021, modelYear: 2021, engine: '1.4 TSI', version: 'Highline' },
+    'ABC1234': { make: 'Chevrolet', model: 'Onix', year: 2022, modelYear: 2022, engine: '1.0 Turbo', version: 'LTZ' },
+    'XYZ5678': { make: 'Ford', model: 'Mustang', year: 2020, modelYear: 2020, engine: '5.0 V8', version: 'GT Premium' },
+    'JKL4321': { make: 'Honda', model: 'Civic', year: 2019, modelYear: 2019, engine: '1.5 Turbo', version: 'Touring' },
+    'GDV2F53': { make: 'Hyundai', model: 'Creta', year: 2023, modelYear: 2023, engine: '1.0 Turbo', version: 'Platinum' },
 };
 
 

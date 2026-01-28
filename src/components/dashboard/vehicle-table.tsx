@@ -67,7 +67,8 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
             </TableCell>
             <TableCell className="font-medium">
               <div className='font-bold'>{`${vehicle.make} ${vehicle.model}`}</div>
-              <div className='text-xs text-muted-foreground'>{vehicle.year}</div>
+              <div className='text-sm text-muted-foreground'>{vehicle.version}</div>
+              <div className='text-xs text-muted-foreground'>{`${vehicle.year}/${vehicle.modelYear}`}</div>
               <div className='text-xs text-muted-foreground font-mono'>{vehicle.plate}</div>
             </TableCell>
             <TableCell>

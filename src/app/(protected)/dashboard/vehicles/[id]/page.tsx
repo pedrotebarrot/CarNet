@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Calendar, Gauge, DollarSign, Tag, FileText, Fingerprint } from "lucide-react";
+import { ChevronLeft, Calendar, Gauge, DollarSign, Tag, FileText, Fingerprint, Wrench, Cog } from "lucide-react";
 import { vehicles, type Vehicle } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,11 +21,11 @@ const statusText = {
 };
 
 const VehicleStat = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => (
-    <div className="flex items-center gap-3 rounded-lg border bg-background p-4">
+    <div className="flex items-center gap-3 rounded-lg border bg-background p-3">
         <div className="text-primary">{icon}</div>
         <div>
             <div className="text-sm text-muted-foreground">{label}</div>
-            <div className="text-lg font-semibold">{value}</div>
+            <div className="text-md font-semibold">{value}</div>
         </div>
     </div>
 )
@@ -46,9 +46,12 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
             <span className="sr-only">Voltar</span>
           </Link>
         </Button>
-        <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
-          {vehicle.make} {vehicle.model}
-        </h1>
+        <div className="flex-1 shrink-0 whitespace-nowrap sm:grow-0">
+            <h1 className="text-xl font-semibold tracking-tight">
+            {vehicle.make} {vehicle.model}
+            </h1>
+            <p className="text-sm text-muted-foreground">{vehicle.version}</p>
+        </div>
         <Badge variant="outline" className="ml-auto sm:ml-0">
           {statusText[vehicle.status]}
         </Badge>
@@ -98,12 +101,14 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                     <CardTitle>Detalhes do Veículo</CardTitle>
                     <CardDescription>Informações principais e valores.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <VehicleStat icon={<DollarSign size={24}/>} label="Preço" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(vehicle.price)} />
-                    <VehicleStat icon={<Gauge size={24}/>} label="Quilometragem" value={`${new Intl.NumberFormat('pt-BR').format(vehicle.mileage)} km`} />
-                    <VehicleStat icon={<Calendar size={24}/>} label="Ano" value={vehicle.year} />
-                    <VehicleStat icon={<Tag size={24}/>} label="Marca / Modelo" value={`${vehicle.make} ${vehicle.model}`} />
-                    <VehicleStat icon={<Fingerprint size={24}/>} label="Placa" value={vehicle.plate} />
+                <CardContent className="grid gap-3">
+                    <VehicleStat icon={<DollarSign size={20}/>} label="Preço" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(vehicle.price)} />
+                    <VehicleStat icon={<Gauge size={20}/>} label="Quilometragem" value={`${new Intl.NumberFormat('pt-BR').format(vehicle.mileage)} km`} />
+                    <VehicleStat icon={<Calendar size={20}/>} label="Ano Fabricação / Modelo" value={`${vehicle.year} / ${vehicle.modelYear}`} />
+                    <VehicleStat icon={<Tag size={20}/>} label="Marca / Modelo" value={`${vehicle.make} ${vehicle.model}`} />
+                    <VehicleStat icon={<Cog size={20}/>} label="Versão" value={vehicle.version} />
+                    <VehicleStat icon={<Wrench size={20}/>} label="Motor" value={vehicle.engine} />
+                    <VehicleStat icon={<Fingerprint size={20}/>} label="Placa" value={vehicle.plate} />
                 </CardContent>
             </Card>
 

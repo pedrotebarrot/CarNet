@@ -22,7 +22,10 @@ export function GenerateContentCard({ vehicle }: { vehicle: Vehicle }) {
       const input: GenerateInstagramCaptionInput = {
         make: vehicle.make,
         model: vehicle.model,
+        version: vehicle.version,
         year: vehicle.year,
+        modelYear: vehicle.modelYear,
+        engine: vehicle.engine,
         mileage: vehicle.mileage,
         price: vehicle.price,
         description: vehicle.description,
