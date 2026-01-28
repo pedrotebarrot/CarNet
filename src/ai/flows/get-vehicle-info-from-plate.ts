@@ -29,7 +29,7 @@ export type GetVehicleInfoFromPlateOutput = z.infer<typeof GetVehicleInfoFromPla
 // This is a mock database. In a real application, you would query a database
 // or an external API to get this information.
 const MOCK_PLATE_DB: Record<string, Omit<GetVehicleInfoFromPlateOutput, 'plate'>> = {
-    'BRA2E19': { make: 'Volkswagen', model: 'Golf', year: 2021, modelYear: 2021, engine: '1.4 TSI', version: 'Highline' },
+    'BRA2E19': { make: 'Chevrolet', model: 'Onix', year: 2022, modelYear: 2022, engine: '1.0 Turbo', version: 'Premier' },
     'ABC1234': { make: 'Chevrolet', model: 'Onix', year: 2022, modelYear: 2022, engine: '1.0 Turbo', version: 'LTZ' },
     'XYZ5678': { make: 'Ford', model: 'Mustang', year: 2020, modelYear: 2020, engine: '5.0 V8', version: 'GT Premium' },
     'JKL4321': { make: 'Honda', model: 'Civic', year: 2019, modelYear: 2019, engine: '1.5 Turbo', version: 'Touring' },
