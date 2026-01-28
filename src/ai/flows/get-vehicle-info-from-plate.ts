@@ -11,12 +11,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GetVehicleInfoFromPlateInputSchema = z.object({
+const GetVehicleInfoFromPlateInputSchema = z.object({
   plate: z.string().describe('The vehicle license plate.'),
 });
 export type GetVehicleInfoFromPlateInput = z.infer<typeof GetVehicleInfoFromPlateInputSchema>;
 
-export const GetVehicleInfoFromPlateOutputSchema = z.object({
+const GetVehicleInfoFromPlateOutputSchema = z.object({
   make: z.string().describe('The make of the vehicle.'),
   model: z.string().describe('The model of the vehicle.'),
   year: z.number().describe('The year of the vehicle.'),
