@@ -1,0 +1,279 @@
+{
+  "entities": {
+    "Dealership": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Dealership",
+      "type": "object",
+      "description": "Represents a vehicle dealership.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the dealership."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the dealership."
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the dealership."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the dealership."
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "The WhatsApp number of the dealership."
+        },
+        "instagramLink": {
+          "type": "string",
+          "description": "Link to the dealership's Instagram profile.",
+          "format": "uri"
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the dealership's logo image.",
+          "format": "uri"
+        },
+        "primaryColor": {
+          "type": "string",
+          "description": "The dealership's primary color (e.g., hex code)."
+        },
+        "subdomain": {
+          "type": "string",
+          "description": "The subdomain for the dealership's public catalog."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account associated with a dealership.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "dealershipId": {
+          "type": "string",
+          "description": "ID of the dealership this user belongs to."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role within the dealership (e.g., admin, employee)."
+        }
+      },
+      "required": [
+        "id",
+        "dealershipId",
+        "email"
+      ]
+    },
+    "Vehicle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vehicle",
+      "type": "object",
+      "description": "Represents a vehicle in the dealership's inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the vehicle."
+        },
+        "dealershipId": {
+          "type": "string",
+          "description": "Reference to Dealership. (Relationship: Dealership 1:N Vehicle)"
+        },
+        "plate": {
+          "type": "string",
+          "description": "The license plate of the vehicle."
+        },
+        "make": {
+          "type": "string",
+          "description": "The make of the vehicle (e.g., Toyota)."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model of the vehicle (e.g., Camry)."
+        },
+        "year": {
+          "type": "number",
+          "description": "The year the vehicle was manufactured."
+        },
+        "modelYear": {
+          "type": "number",
+          "description": "The model year of the vehicle."
+        },
+        "engine": {
+          "type": "string",
+          "description": "The engine specification (e.g., 1.6, 2.0 Turbo)."
+        },
+        "version": {
+          "type": "string",
+          "description": "The specific version or trim of the model."
+        },
+        "mileage": {
+          "type": "number",
+          "description": "The vehicle's mileage."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the vehicle."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the vehicle."
+        },
+        "status": {
+          "type": "string",
+          "description": "The vehicle's status (available, sold, unavailable)."
+        },
+        "imageUrl": {
+          "type": "array",
+          "description": "Array of URLs of images for this vehicle.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internalNotes": {
+          "type": "string",
+          "description": "Internal notes about the vehicle."
+        }
+      },
+      "required": [
+        "id",
+        "dealershipId",
+        "plate",
+        "make",
+        "model",
+        "year",
+        "price",
+        "status"
+      ]
+    },
+    "AiContent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AiContent",
+      "type": "object",
+      "description": "Represents the AI generated content for a vehicle.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AI content."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to Vehicle. (Relationship: Vehicle 1:1 AiContent)"
+        },
+        "socialMediaCaption": {
+          "type": "string",
+          "description": "AI-generated caption for social media."
+        },
+        "visualPostSuggestion": {
+          "type": "string",
+          "description": "AI-generated suggestion for a visual post (e.g., template name)."
+        }
+      },
+      "required": [
+        "id",
+        "vehicleId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles with their associated dealership ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user, matches auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}",
+        "definition": {
+          "entityName": "Dealership",
+          "schema": {
+            "$ref": "#/backend/entities/Dealership"
+          },
+          "description": "Stores dealership profile information.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": {
+            "$ref": "#/backend/entities/Vehicle"
+          },
+          "description": "Stores vehicle information for a dealership.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/dealerships/{dealershipId}/vehicles/{vehicleId}/aiContent/{aiContentId}",
+        "definition": {
+          "entityName": "AiContent",
+          "schema": {
+            "$ref": "#/backend/entities/AiContent"
+          },
+          "description": "Stores AI-generated content for a specific vehicle.",
+          "params": [
+            {
+              "name": "dealershipId",
+              "description": "Unique identifier for the dealership."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            },
+            {
+              "name": "aiContentId",
+              "description": "Unique identifier for the AI content."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

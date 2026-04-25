@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isOwner(userId) {
+        return request.auth.uid == userId;
+    }
+
+    // Users can read/update their own user document.
+    match /users/{userId} {
+      allow read, update: if isSignedIn() && isOwner(userId);
+      // Create happens in a secure context (signup function).
+      allow create: if isSignedIn();
+      allow list, delete: if false;
+    }
+    
+    // Dealerships can be read publicly (for catalog).
+    // Writes are only allowed by users belonging to that dealership.
+    match /dealerships/{dealershipId} {
+      allow get: if true;
+      allow list: if true; // For public catalogs
+      allow write: if isSignedIn() && getUserData().dealershipId == dealershipId;
+    }
+    
+    // All subcollections under a dealership follow the same rule, but can be overridden.
+    match /dealerships/{dealershipId}/{path=**} {
+       allow read, write: if isSignedIn() && getUserData().dealershipId == dealershipId;
+    }
+    
+     // Override for public vehicle catalog
+    match /dealerships/{dealershipId}/vehicles/{vehicleId} {
+      allow get: if true;
+      allow list: if true; // Public can list vehicles for catalog
+      // Writes are restricted to dealership members
+      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == dealershipId;
+    }
+    // Vehicles collection
+    match /vehicles/{vehicleId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == request.resource.data.dealershipId || (resource != null && getUserData().dealershipId == resource.data.dealershipId);
+    }
+  }
+}
