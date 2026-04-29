@@ -30,22 +30,22 @@ service cloud.firestore {
       allow write: if isSignedIn() && getUserData().dealershipId == dealershipId;
     }
     
-    // All subcollections under a dealership follow the same rule, but can be overridden.
+    // All subcollections under a dealership follow the same rule.
     match /dealerships/{dealershipId}/{path=**} {
        allow read, write: if isSignedIn() && getUserData().dealershipId == dealershipId;
     }
-    
-     // Override for public vehicle catalog
-    match /dealerships/{dealershipId}/vehicles/{vehicleId} {
-      allow get: if true;
-      allow list: if true; // Public can list vehicles for catalog
-      // Writes are restricted to dealership members
-      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == dealershipId;
-    }
-    // Vehicles collection
+
+    // Vehicles collection (root-level, used by the entire app)
     match /vehicles/{vehicleId} {
+      // Anyone can read vehicles (for public catalog pages)
       allow read: if true;
-      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == request.resource.data.dealershipId || (resource != null && getUserData().dealershipId == resource.data.dealershipId);
+      // Only authenticated users belonging to the same dealership can write/delete
+      // NOTE: Parentheses are required to correctly scope the OR condition inside the AND
+      allow create, update, delete: if isSignedIn() && (
+        (request.resource != null && getUserData().dealershipId == request.resource.data.dealershipId) ||
+        (resource != null && getUserData().dealershipId == resource.data.dealershipId)
+      );
     }
   }
 }
+

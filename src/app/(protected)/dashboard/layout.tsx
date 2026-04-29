@@ -6,9 +6,8 @@ import { useUser, useAuth } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Car, Menu, Search, Settings, ExternalLink } from "lucide-react";
+import { Car, Menu, Settings, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -130,7 +129,7 @@ export default function DashboardLayout({
                   Estoque
                 </Link>
                 <Link
-                  href="#"
+                  href="/settings"
                   className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                 >
                   <Settings className="h-5 w-5" />
@@ -139,18 +138,7 @@ export default function DashboardLayout({
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1">
-            <form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Buscar veículo..."
-                  className="w-full appearance-none bg-background pl-8 md:w-2/3 lg:w-1/3"
-                />
-              </div>
-            </form>
-          </div>
+          <div className="w-full flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

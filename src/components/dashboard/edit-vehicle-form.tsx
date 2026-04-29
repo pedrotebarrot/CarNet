@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Search, Sparkles, Trash2, Upload, X, Check } from 'lucide-react';
+import { Loader2, Search, Sparkles, Upload, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { vehicleMakes, getYears, VehicleMake, vehicleTransmissions } from '@/lib/vehicle-data';
+import { vehicleMakes, getYears } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
 import { generateInstagramCaption } from '@/ai/flows/generate-instagram-caption';
 import { useToast } from '@/hooks/use-toast';
@@ -156,6 +156,42 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     }
   };
 
+  const setAsCover = async (index: number) => {
+    if (index === 0) return;
+    const newImages = [...currentImages];
+    const [coverImage] = newImages.splice(index, 1);
+    newImages.unshift(coverImage);
+    setCurrentImages(newImages);
+    
+    try {
+      const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
+      await updateDoc(vehicleRef, { images: newImages, updatedAt: new Date() });
+      toast({ title: "Capa atualizada!" });
+    } catch (error) {
+      toast({ title: "Erro ao atualizar capa", variant: "destructive" });
+    }
+  };
+
+  const moveImage = async (index: number, direction: 'left' | 'right') => {
+    if (direction === 'left' && index === 0) return;
+    if (direction === 'right' && index === currentImages.length - 1) return;
+
+    const newIndex = direction === 'left' ? index - 1 : index + 1;
+    const newImages = [...currentImages];
+    const temp = newImages[index];
+    newImages[index] = newImages[newIndex];
+    newImages[newIndex] = temp;
+    
+    setCurrentImages(newImages);
+    
+    try {
+      const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
+      await updateDoc(vehicleRef, { images: newImages, updatedAt: new Date() });
+    } catch (error) {
+      toast({ title: "Erro ao reordenar", variant: "destructive" });
+    }
+  };
+
   async function onSubmit(data: VehicleFormValues) {
     setIsSubmitting(true);
     try {
@@ -190,15 +226,61 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
               {currentImages.map((url, index) => (
                 <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border bg-muted">
                   <img src={url} alt="Veículo" className="object-cover w-full h-full" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                  
+                  {/* Image Actions Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                    
+                    {/* Top actions */}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+                        title="Remover foto"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    {/* Bottom actions */}
+                    <div className="flex items-center justify-between mt-auto">
+                      <div className="flex gap-1">
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => moveImage(index, 'left')}
+                            className="p-1 bg-black/60 hover:bg-black/80 text-white rounded transition-colors"
+                            title="Mover para esquerda"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                        )}
+                        {index < currentImages.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => moveImage(index, 'right')}
+                            className="p-1 bg-black/60 hover:bg-black/80 text-white rounded transition-colors"
+                            title="Mover para direita"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      
+                      {index !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAsCover(index)}
+                          className="px-2 py-1 bg-black/60 hover:bg-black/80 text-white rounded text-[10px] font-medium transition-colors"
+                        >
+                          Tornar Capa
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {index === 0 && (
-                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-primary text-white text-[8px] font-bold rounded">
+                    <div className="absolute top-3 -left-8 w-32 bg-primary text-primary-foreground text-[10px] font-bold py-1 text-center -rotate-45 shadow-sm pointer-events-none tracking-widest z-10">
                       CAPA
                     </div>
                   )}

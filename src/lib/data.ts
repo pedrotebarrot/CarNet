@@ -16,7 +16,11 @@ export type Vehicle = {
   status: 'available' | 'sold' | 'unavailable';
   images?: string[];
   featuredImage?: string;
+  dealershipId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
+
 
 export const vehicles: Vehicle[] = [
   {

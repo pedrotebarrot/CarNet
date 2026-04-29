@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MoreHorizontal, Sparkles, Edit, Trash2, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Sparkles, Edit, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,9 +41,16 @@ const statusText = {
   unavailable: 'Indisponível',
 };
 
+type SortConfig = {
+  key: keyof Vehicle | 'make_model';
+  direction: 'asc' | 'desc';
+} | null;
+
 export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+  
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -93,6 +100,43 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
     }
   };
 
+  const handleSort = (key: SortConfig['key']) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground opacity-50" />;
+    if (sortConfig.direction === 'asc') return <ArrowUp className="ml-2 h-4 w-4" />;
+    return <ArrowDown className="ml-2 h-4 w-4" />;
+  };
+
+  const sortedVehicles = useMemo(() => {
+    let sortableItems = [...vehicles];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        if (sortConfig.key === 'make_model') {
+          const aName = `${a.make} ${a.model}`.toLowerCase();
+          const bName = `${b.make} ${b.model}`.toLowerCase();
+          return aName.localeCompare(bName) * direction;
+        }
+        
+        const aVal = a[sortConfig.key as keyof Vehicle];
+        const bVal = b[sortConfig.key as keyof Vehicle];
+        
+        if (aVal < bVal) return -1 * direction;
+        if (aVal > bVal) return 1 * direction;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [vehicles, sortConfig]);
+
   return (
     <div className="space-y-4">
       {selectedIds.length > 0 && (
@@ -129,18 +173,30 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
             <TableHead className="hidden w-[100px] sm:table-cell">
               <span className="sr-only">Image</span>
             </TableHead>
-            <TableHead>Veículo</TableHead>
+            <TableHead className="cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('make_model')}>
+              <div className="flex items-center">
+                Veículo <SortIcon columnKey="make_model" />
+              </div>
+            </TableHead>
             <TableHead>Detalhes</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Preço</TableHead>
-            <TableHead className="hidden md:table-cell">Quilometragem</TableHead>
+            <TableHead className="hidden md:table-cell cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('price')}>
+              <div className="flex items-center">
+                Preço <SortIcon columnKey="price" />
+              </div>
+            </TableHead>
+            <TableHead className="hidden md:table-cell cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('mileage')}>
+              <div className="flex items-center">
+                Quilometragem <SortIcon columnKey="mileage" />
+              </div>
+            </TableHead>
             <TableHead>
               <span className="sr-only">Ações</span>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vehicles.map((vehicle) => (
+          {sortedVehicles.map((vehicle) => (
             <TableRow key={vehicle.id} data-state={selectedIds.includes(vehicle.id) ? "selected" : undefined}>
               <TableCell>
                 <Checkbox 
