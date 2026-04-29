@@ -91,10 +91,23 @@ export function BulkImportForm() {
           const rawMileage = row.quilometragem || row.km || row.mileage || '0';
           const mileage = parseInt(String(rawMileage).replace(/\D/g, '')) || 0;
 
-          // Price cleanup (assuming input is in reais, e.g. 120000 or 120000.50)
+          // Price cleanup
           const rawPrice = row.preco || row.price || row.valor || '0';
-          // Se tiver vírgula, substitui por ponto
-          const normalizedPrice = String(rawPrice).replace(',', '.').replace(/[^0-9.]/g, '');
+          let rawStr = String(rawPrice).trim();
+          
+          if (rawStr.includes(',')) {
+            // Se tem vírgula, consideramos como separador decimal (ex: 65.000,00)
+            rawStr = rawStr.replace(/\./g, '').replace(',', '.');
+          } else {
+            // Se não tem vírgula, mas tem ponto, verificamos se o ponto é milhar ou decimal
+            const parts = rawStr.split('.');
+            if (parts.length > 1 && parts[parts.length - 1].length !== 2) {
+              // Ex: 65.000 (3 dígitos após o ponto) -> é milhar, removemos
+              rawStr = rawStr.replace(/\./g, '');
+            }
+          }
+          
+          const normalizedPrice = rawStr.replace(/[^0-9.]/g, '');
           const price = Math.round(parseFloat(normalizedPrice) * 100) || 0;
           if (price <= 0) errors.push('Preço inválido');
 

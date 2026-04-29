@@ -16,7 +16,18 @@ async function getVehicleData(id: string) {
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) return null;
-    return { id: docSnap.id, ...docSnap.data() };
+    
+    const data = docSnap.data();
+    const serializedData = { ...data };
+    
+    if (serializedData.createdAt && typeof serializedData.createdAt.toDate === 'function') {
+      serializedData.createdAt = serializedData.createdAt.toDate().toISOString();
+    }
+    if (serializedData.updatedAt && typeof serializedData.updatedAt.toDate === 'function') {
+      serializedData.updatedAt = serializedData.updatedAt.toDate().toISOString();
+    }
+
+    return { id: docSnap.id, ...serializedData };
 }
 
 const statusText = {
