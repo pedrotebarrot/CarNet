@@ -227,11 +227,21 @@ export default function SettingsPage() {
                             />
 
                             {dealershipData?.slug && (
-                                <div className="rounded-md bg-muted p-4">
-                                    <p className="text-sm font-medium">Link da Loja:</p>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        {`${window.location.origin}/${dealershipData.slug}`}
-                                    </p>
+                                <div className="rounded-md bg-muted p-4 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium">Link da sua loja:</p>
+                                        <p className="text-sm text-primary font-mono mt-1">
+                                            {typeof window !== 'undefined' ? `${window.location.origin}/${dealershipData.slug}` : `/${dealershipData.slug}`}
+                                        </p>
+                                    </div>
+                                    <a
+                                        href={`/${dealershipData.slug}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-primary underline underline-offset-4 whitespace-nowrap hover:text-primary/80"
+                                    >
+                                        Abrir site →
+                                    </a>
                                 </div>
                             )}
 

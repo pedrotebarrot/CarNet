@@ -24,7 +24,7 @@ export function PostPreview({ vehicle }: { vehicle: Vehicle }) {
                 <div className="absolute bottom-4 left-4 right-4 text-white">
                     <h3 className="text-2xl font-bold">{vehicle.make} {vehicle.model}</h3>
                     <div className="flex justify-between items-center mt-2">
-                        <p className="text-lg font-semibold bg-accent text-accent-foreground px-3 py-1 rounded-md">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(vehicle.price)}</p>
+                        <p className="text-lg font-semibold bg-accent text-accent-foreground px-3 py-1 rounded-md">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(vehicle.price / 100)}</p>
                         <p className="text-sm">{vehicle.year} &bull; {new Intl.NumberFormat('pt-BR').format(vehicle.mileage)} km</p>
                     </div>
                 </div>

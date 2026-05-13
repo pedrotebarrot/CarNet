@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
     'jws',
     'jwa',
     'buffer-equal-constant-time',
+    'firebase',
+    '@firebase/app',
+    '@firebase/firestore',
+    '@firebase/auth',
+    '@firebase/storage',
   ],
   typescript: {
     ignoreBuildErrors: true,

@@ -1,5 +1,4 @@
 import type { SVGProps } from 'react';
-import { cn } from '@/lib/utils';
 
 export function Logo(props: SVGProps<SVGSVGElement>) {
   return (
@@ -13,12 +12,9 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       {...props}
     >
-      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="hsl(var(--primary))" />
-      <path d="M2 17l10 5 10-5" stroke="hsl(var(--primary))" />
-      <path d="M2 12l10 5 10-5" stroke="hsl(var(--primary))" />
-      <path d="M12 22V12" stroke="hsl(var(--primary))" />
-      <path d="M22 7v10" stroke="hsl(var(--primary))" />
-      <path d="M2 7v10" stroke="hsl(var(--primary))" />
+      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="currentColor" stroke="none" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
     </svg>
   );
 }

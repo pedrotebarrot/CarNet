@@ -9,43 +9,62 @@ service cloud.firestore {
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
+
     function isOwner(userId) {
-        return request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
-    // Users can read/update their own user document.
+    // ─── Users ────────────────────────────────────────────────────────────────
+    // Each user can only read and write their own document.
     match /users/{userId} {
       allow read, update: if isSignedIn() && isOwner(userId);
-      // Create happens in a secure context (signup function).
-      allow create: if isSignedIn();
+      // During signup the user creates their own profile — userId must match auth uid.
+      allow create: if isSignedIn() && isOwner(userId);
       allow list, delete: if false;
     }
-    
-    // Dealerships can be read publicly (for catalog).
-    // Writes are only allowed by users belonging to that dealership.
+
+    // ─── Dealerships ──────────────────────────────────────────────────────────
+    // Public read so catalog pages work without auth.
+    // Writes are restricted to the dealership owner / member.
     match /dealerships/{dealershipId} {
-      allow get: if true;
-      allow list: if true; // For public catalogs
-      allow write: if isSignedIn() && getUserData().dealershipId == dealershipId;
+      allow get, list: if true;
+
+      // During signup the user doc does not exist yet, so we cannot call
+      // getUserData(). Instead we verify the caller is setting themselves as owner.
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+
+      // Update: either the original owner OR a verified member may update.
+      // ownerId is immutable after creation.
+      allow update: if isSignedIn()
+        && request.resource.data.ownerId == resource.data.ownerId
+        && (
+          resource.data.ownerId == request.auth.uid
+          || getUserData().dealershipId == dealershipId
+        );
+
+      // Only the original owner can delete.
+      allow delete: if isSignedIn()
+        && resource.data.ownerId == request.auth.uid;
     }
-    
-    // All subcollections under a dealership follow the same rule, but can be overridden.
-    match /dealerships/{dealershipId}/{path=**} {
-       allow read, write: if isSignedIn() && getUserData().dealershipId == dealershipId;
-    }
-    
-     // Override for public vehicle catalog
-    match /dealerships/{dealershipId}/vehicles/{vehicleId} {
-      allow get: if true;
-      allow list: if true; // Public can list vehicles for catalog
-      // Writes are restricted to dealership members
-      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == dealershipId;
-    }
-    // Vehicles collection
+
+    // ─── Vehicles ─────────────────────────────────────────────────────────────
+    // Public read so the storefront catalog works without auth.
+    // All writes are restricted to the dealership that owns the vehicle.
     match /vehicles/{vehicleId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn() && getUserData().dealershipId == request.resource.data.dealershipId || (resource != null && getUserData().dealershipId == resource.data.dealershipId);
+
+      // dealershipId must match the caller's dealership.
+      allow create: if isSignedIn()
+        && getUserData().dealershipId == request.resource.data.dealershipId;
+
+      // dealershipId is immutable — prevents "vehicle theft" between revendas.
+      allow update: if isSignedIn()
+        && getUserData().dealershipId == resource.data.dealershipId
+        && request.resource.data.dealershipId == resource.data.dealershipId;
+
+      allow delete: if isSignedIn()
+        && getUserData().dealershipId == resource.data.dealershipId;
     }
   }
 }

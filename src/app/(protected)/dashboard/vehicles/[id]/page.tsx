@@ -1,34 +1,14 @@
+'use client';
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EditVehicleForm } from "@/components/dashboard/edit-vehicle-form";
-
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { firebaseConfig } from '@/firebase/config';
-
-async function getVehicleData(id: string) {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const firestore = getFirestore(app);
-    const docRef = doc(firestore, 'vehicles', id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return null;
-    
-    const data = docSnap.data();
-    const serializedData = { ...data };
-    
-    if (serializedData.createdAt && typeof serializedData.createdAt.toDate === 'function') {
-      serializedData.createdAt = serializedData.createdAt.toDate().toISOString();
-    }
-    if (serializedData.updatedAt && typeof serializedData.updatedAt.toDate === 'function') {
-      serializedData.updatedAt = serializedData.updatedAt.toDate().toISOString();
-    }
-
-    return { id: docSnap.id, ...serializedData };
-}
+import { GenerateContentCard } from "@/components/dashboard/generate-content-card";
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useParams } from 'next/navigation';
 
 const statusText = {
   available: 'Disponível',
@@ -36,12 +16,31 @@ const statusText = {
   unavailable: 'Indisponível',
 };
 
-export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const vehicle = await getVehicleData(id);
+export default function VehicleDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const firestore = useFirestore();
+
+  const vehicleRef = useMemoFirebase(() => doc(firestore, 'vehicles', id), [firestore, id]);
+  const { data: vehicle, isLoading } = useDoc(vehicleRef);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!vehicle) {
-    notFound();
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center flex-col gap-4">
+        <p className="text-muted-foreground">Veículo não encontrado.</p>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard">Voltar ao Estoque</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -65,6 +64,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <EditVehicleForm vehicle={vehicle} />
+      <GenerateContentCard vehicle={vehicle} />
     </div>
   );
 }
