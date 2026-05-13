@@ -100,7 +100,7 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
     }
   };
 
-  const handleSort = (key: SortConfig['key']) => {
+  const handleSort = (key: NonNullable<SortConfig>['key']) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -109,7 +109,7 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
   };
 
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
-    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground opacity-50" />;
+    if (!sortConfig || sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground opacity-50" />;
     if (sortConfig.direction === 'asc') return <ArrowUp className="ml-2 h-4 w-4" />;
     return <ArrowDown className="ml-2 h-4 w-4" />;
   };
@@ -128,7 +128,8 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
         
         const aVal = a[sortConfig.key as keyof Vehicle];
         const bVal = b[sortConfig.key as keyof Vehicle];
-        
+
+        if (aVal === undefined || bVal === undefined) return 0;
         if (aVal < bVal) return -1 * direction;
         if (aVal > bVal) return 1 * direction;
         return 0;
