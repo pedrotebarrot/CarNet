@@ -174,26 +174,28 @@ export function IntegrationsCard({
             <div className="space-y-3">
               <a
                 href={`/api/mercadolivre/connect?dealershipId=${dealershipId}`}
-                className="inline-flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#FFE600', color: '#333333' }}
               >
                 <ExternalLink className="h-4 w-4" />
                 Conectar conta do Mercado Livre
               </a>
 
-              {/* Aviso se credenciais não configuradas */}
-              <div className="flex items-start gap-2 rounded border p-3 text-xs" style={{ borderColor: '#fde68a', backgroundColor: '#fffbeb' }}>
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: '#d97706' }} />
-                <div style={{ color: '#92400e' }}>
-                  <p className="font-semibold mb-1">Configuração necessária antes de conectar:</p>
-                  <ol className="space-y-1 list-decimal list-inside">
-                    <li>Crie um app em <a href="https://developers.mercadolibre.com.br" target="_blank" rel="noopener noreferrer" className="underline">developers.mercadolibre.com.br</a></li>
-                    <li>Configure o redirect URI: <code className="bg-amber-100 px-1 rounded">autosdigital.vercel.app/api/mercadolivre/callback</code></li>
-                    <li>Adicione <code className="bg-amber-100 px-1 rounded">ML_APP_ID</code> e <code className="bg-amber-100 px-1 rounded">ML_SECRET_KEY</code> nas variáveis de ambiente do Vercel</li>
-                    <li>Faça um novo deploy e volte aqui</li>
-                  </ol>
+              {/* Aviso só aparece se as credenciais ainda não foram configuradas */}
+              {!mlConfigured && (
+                <div className="flex items-start gap-2 rounded border p-3 text-xs" style={{ borderColor: '#fde68a', backgroundColor: '#fffbeb' }}>
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+                  <div style={{ color: '#92400e' }}>
+                    <p className="font-semibold mb-1">Configuração necessária antes de conectar:</p>
+                    <ol className="space-y-1 list-decimal list-inside">
+                      <li>Crie um app em <a href="https://developers.mercadolibre.com.br" target="_blank" rel="noopener noreferrer" className="underline">developers.mercadolibre.com.br</a></li>
+                      <li>Configure o redirect URI: <code className="bg-amber-100 px-1 rounded">autosdigital.vercel.app/api/mercadolivre/callback</code></li>
+                      <li>Adicione <code className="bg-amber-100 px-1 rounded">ML_APP_ID</code> e <code className="bg-amber-100 px-1 rounded">ML_SECRET_KEY</code> nas variáveis de ambiente do Vercel</li>
+                      <li>Faça um novo deploy e volte aqui</li>
+                    </ol>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
