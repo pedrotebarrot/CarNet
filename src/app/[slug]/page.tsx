@@ -3,6 +3,7 @@ import { getFirestore, collection, query, where, getDocs, limit } from 'firebase
 import { firebaseConfig } from '@/firebase/config';
 import { notFound } from 'next/navigation';
 import { VehicleGrid } from '@/components/storefront/vehicle-grid';
+import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 
 export const revalidate = 300;
 
@@ -37,11 +38,15 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
         ? `https://wa.me/55${dealership.phone.replace(/\D/g, '')}`
         : null;
 
+    const palette = dealership.brandColors?.primary
+        ? buildBrandPalette(dealership.brandColors.primary)
+        : DEFAULT_PALETTE;
+
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#f8f9ff', color: '#0b1c30' }}>
 
             {/* ── Header ─────────────────────────────────────────────── */}
-            <header style={{ backgroundColor: '#131b2e' }} className="sticky top-0 z-50 shadow-lg">
+            <header style={{ backgroundColor: palette.header }} className="sticky top-0 z-50 shadow-lg">
                 <div className="mx-auto max-w-[1280px] px-4 md:px-16 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
                         {dealership.logoUrl ? (
@@ -49,7 +54,7 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
                                 <img src={dealership.logoUrl} alt={dealership.name} className="w-full h-full object-contain bg-white/10" />
                             </div>
                         ) : (
-                            <div className="h-12 w-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ backgroundColor: '#3980f4' }}>
+                            <div className="h-12 w-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0" style={{ backgroundColor: palette.primary }}>
                                 {dealership.name.substring(0, 2).toUpperCase()}
                             </div>
                         )}
@@ -84,11 +89,12 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
                     vehicles={vehicles}
                     dealershipSlug={dealership.slug}
                     whatsappBase={whatsappBase}
+                    palette={palette}
                 />
             </main>
 
             {/* ── Footer ─────────────────────────────────────────────── */}
-            <footer style={{ backgroundColor: '#131b2e' }} className="mt-16 py-8">
+            <footer style={{ backgroundColor: palette.header }} className="mt-16 py-8">
                 <div className="mx-auto max-w-[1280px] px-4 md:px-16 flex flex-col md:flex-row items-center justify-between gap-2">
                     <p className="text-white/60 text-sm">&copy; {new Date().getFullYear()} {dealership.name}. Todos os direitos reservados.</p>
                     <p className="text-white/40 text-xs">Powered by AutosDigital</p>

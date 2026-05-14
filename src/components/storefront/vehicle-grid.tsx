@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Gauge, Fuel, Settings2, CalendarDays, Search, ArrowUpDown } from 'lucide-react';
+import { type BrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ interface VehicleGridProps {
   vehicles: Vehicle[];
   dealershipSlug: string;
   whatsappBase: string | null;
+  palette?: BrandPalette;
 }
 
 // ── Sort options ─────────────────────────────────────────────────────────────
@@ -69,7 +71,7 @@ function formatMileage(km: number) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleGridProps) {
+export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = DEFAULT_PALETTE }: VehicleGridProps) {
   const [sort,   setSort]   = useState('default');
   const [search, setSearch] = useState('');
 
@@ -107,8 +109,8 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
               placeholder="Buscar marca ou modelo..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full rounded border pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#3980f4]/30"
-              style={{ borderColor: '#e5eeff', backgroundColor: '#fff', color: '#0b1c30' }}
+              className="w-full rounded border pl-8 pr-3 py-2 text-sm outline-none focus:ring-2"
+              style={{ borderColor: palette.border, backgroundColor: '#fff', color: '#0b1c30' }}
             />
           </div>
 
@@ -118,8 +120,8 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className="appearance-none rounded border pl-8 pr-8 py-2 text-sm outline-none focus:ring-2 focus:ring-[#3980f4]/30 cursor-pointer"
-              style={{ borderColor: '#e5eeff', backgroundColor: '#fff', color: '#0b1c30' }}
+              className="appearance-none rounded border pl-8 pr-8 py-2 text-sm outline-none focus:ring-2 cursor-pointer"
+              style={{ borderColor: palette.border, backgroundColor: '#fff', color: '#0b1c30' }}
             >
               {SORT_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -131,7 +133,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
 
       {/* ── Grid ─────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-lg border" style={{ borderColor: '#e5eeff' }}>
+        <div className="text-center py-24 bg-white rounded-lg border" style={{ borderColor: palette.border }}>
           {search ? (
             <>
               <p className="font-headline font-semibold text-lg" style={{ color: '#0b1c30' }}>
@@ -139,7 +141,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
               </p>
               <p className="text-sm mt-2" style={{ color: '#45464d' }}>
                 Tente buscar por outro modelo ou{' '}
-                <button onClick={() => setSearch('')} className="underline" style={{ color: '#3980f4' }}>
+                <button onClick={() => setSearch('')} className="underline" style={{ color: palette.primary }}>
                   limpar a busca
                 </button>
               </p>
@@ -157,7 +159,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
             <div
               key={vehicle.id}
               className="group relative flex flex-col bg-white rounded-lg border overflow-hidden transition-all duration-200 hover:shadow-md"
-              style={{ borderColor: '#e5eeff' }}
+              style={{ borderColor: palette.border }}
             >
               {/* Invisible full-card link */}
               <Link
@@ -167,7 +169,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
               />
 
               {/* Image */}
-              <div className="aspect-video relative overflow-hidden bg-[#e5eeff]">
+              <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: palette.light }}>
                 {vehicle.images?.[0] ? (
                   <img
                     src={vehicle.images[0]}
@@ -183,7 +185,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
                 )}
                 <span
                   className="absolute top-2 right-2 font-mono text-[10px] font-medium px-2 py-1 rounded-sm uppercase tracking-wider"
-                  style={{ backgroundColor: '#131b2e', color: '#f8f9ff' }}
+                  style={{ backgroundColor: palette.header, color: '#f8f9ff' }}
                 >
                   {vehicle.year}/{vehicle.modelYear}
                 </span>
@@ -203,25 +205,25 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase }: VehicleG
                 {/* Specs */}
                 <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                   <div className="flex items-center gap-1.5">
-                    <Gauge className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
+                    <Gauge className="w-3.5 h-3.5 shrink-0" style={{ color: palette.primary }} />
                     <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
                       {formatMileage(vehicle.mileage)} km
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Fuel className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
+                    <Fuel className="w-3.5 h-3.5 shrink-0" style={{ color: palette.primary }} />
                     <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
                       {vehicle.fuel}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Settings2 className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
+                    <Settings2 className="w-3.5 h-3.5 shrink-0" style={{ color: palette.primary }} />
                     <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
                       {vehicle.transmission}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
+                    <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: palette.primary }} />
                     <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
                       Final {vehicle.plateEnding}
                     </span>

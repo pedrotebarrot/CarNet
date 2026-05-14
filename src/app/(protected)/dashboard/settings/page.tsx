@@ -16,6 +16,7 @@ import { useUser, useFirestore, useStorage, useDoc } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
+import { BrandColorsCard } from '@/components/dashboard/brand-colors-card';
 
 const dealershipSchema = z.object({
     name:    z.string().min(3,  { message: 'O nome deve ter pelo menos 3 caracteres.' }),
@@ -207,6 +208,23 @@ export default function SettingsPage() {
                     </Form>
                 </CardContent>
             </Card>
+
+            {/* ── Cores da Marca ──────────────────────────────────── */}
+            {dealershipData && userData?.dealershipId && (
+                <div>
+                    <h4 className="font-headline font-semibold text-base mb-1" style={{ color: '#0b1c30' }}>
+                        Identidade Visual
+                    </h4>
+                    <p className="text-sm mb-4" style={{ color: '#45464d' }}>
+                        Personalize as cores do site público da sua loja.
+                    </p>
+                    <BrandColorsCard
+                        dealershipId={userData.dealershipId}
+                        logoUrl={dealershipData.logoUrl}
+                        savedColor={dealershipData.brandColors?.primary}
+                    />
+                </div>
+            )}
 
             {/* ── Integrações ─────────────────────────────────────── */}
             {dealershipData?.slug && userData?.dealershipId && (
