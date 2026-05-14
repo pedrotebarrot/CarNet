@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useStorage, useDoc } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { publishVehicleToML } from '@/actions/mercadolivre';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(7, { message: 'A placa deve ter 7 caracteres.' }),
@@ -164,7 +165,7 @@ export function AddVehicleForm() {
         }
       }
 
-      await addDoc(collection(firestore, 'vehicles'), {
+      const vehicleDoc = await addDoc(collection(firestore, 'vehicles'), {
         ...data,
         price: Number(data.price),
         mileage: Number(data.mileage),
@@ -176,6 +177,35 @@ export function AddVehicleForm() {
       });
 
       toast({ title: "Sucesso!", description: "Veículo cadastrado com sucesso." });
+
+      // Publicar no Mercado Livre se conectado (silencioso se não conectado)
+      if (data.status === 'available') {
+        const mlResult = await publishVehicleToML({
+          id:           vehicleDoc.id,
+          make:         data.make,
+          model:        data.model,
+          year:         Number(data.year),
+          modelYear:    Number(data.modelYear),
+          price:        Number(data.price),
+          mileage:      Number(data.mileage),
+          fuel:         data.fuel,
+          transmission: data.transmission,
+          color:        data.color,
+          doors:        Number(data.doors),
+          plateEnding:  data.plateEnding,
+          description:  data.description,
+          images:       imageUrls,
+          dealershipId: userData.dealershipId,
+        });
+
+        if (mlResult.success && mlResult.mlId) {
+          toast({
+            title: "📢 Publicado no Mercado Livre!",
+            description: "O anúncio foi criado automaticamente na sua conta.",
+          });
+        }
+      }
+
       form.reset();
 
     } catch (error: any) {
