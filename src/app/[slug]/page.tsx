@@ -2,8 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
 import { notFound } from 'next/navigation';
-import { Gauge, Fuel, Settings2, CalendarDays } from 'lucide-react';
-import Link from 'next/link';
+import { VehicleGrid } from '@/components/storefront/vehicle-grid';
 
 export const revalidate = 300;
 
@@ -26,14 +25,6 @@ async function getVehicles(dealershipId: string) {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
-}
-
-function formatPrice(cents: number) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(cents / 100);
-}
-
-function formatMileage(km: number) {
-    return new Intl.NumberFormat('pt-BR').format(km);
 }
 
 export default async function DealershipPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -89,116 +80,11 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
 
             {/* ── Vehicles Grid ───────────────────────────────────────── */}
             <main className="mx-auto max-w-[1280px] px-4 md:px-16 py-12">
-                <div className="mb-8">
-                    <h2 className="font-headline font-semibold text-2xl" style={{ color: '#0b1c30' }}>
-                        Estoque disponível
-                    </h2>
-                    <p className="text-sm mt-1" style={{ color: '#45464d' }}>
-                        {vehicles.length} {vehicles.length === 1 ? 'veículo disponível' : 'veículos disponíveis'}
-                    </p>
-                </div>
-
-                {vehicles.length === 0 ? (
-                    <div className="text-center py-24 bg-white rounded-lg border" style={{ borderColor: '#e5eeff' }}>
-                        <p className="font-headline font-semibold text-lg" style={{ color: '#0b1c30' }}>Estoque sendo atualizado</p>
-                        <p className="text-sm mt-2" style={{ color: '#45464d' }}>Volte em breve para conferir nossos veículos.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {vehicles.map((vehicle) => (
-                            // Card uses a relative container + invisible Link overlay so the
-                            // WhatsApp <a> can sit above it without nesting two <a> tags.
-                            <div
-                                key={vehicle.id}
-                                className="group relative flex flex-col bg-white rounded-lg border overflow-hidden transition-all duration-200 hover:shadow-md"
-                                style={{ borderColor: '#e5eeff' }}
-                            >
-                                {/* Invisible full-card link */}
-                                <Link
-                                    href={`/${dealership.slug}/${vehicle.id}`}
-                                    className="absolute inset-0 z-0"
-                                    aria-label={`Ver ${vehicle.make} ${vehicle.model}`}
-                                />
-
-                                {/* Image */}
-                                <div className="aspect-video relative overflow-hidden bg-[#e5eeff]">
-                                    {vehicle.images?.[0] ? (
-                                        <img
-                                            src={vehicle.images[0]}
-                                            alt={`${vehicle.make} ${vehicle.model}`}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center" style={{ color: '#45464d' }}>
-                                            <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 17l-2-2m0 0l-2-2m2 2l2-2m0 0l2-2M3 9l1-4h16l1 4M3 9h18M5 9v8a2 2 0 002 2h10a2 2 0 002-2V9" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                    <span
-                                        className="absolute top-2 right-2 font-mono text-[10px] font-medium px-2 py-1 rounded-sm uppercase tracking-wider"
-                                        style={{ backgroundColor: '#131b2e', color: '#f8f9ff' }}
-                                    >
-                                        {vehicle.year}/{vehicle.modelYear}
-                                    </span>
-                                </div>
-
-                                {/* Body — pointer-events-none so clicks fall through to the link overlay */}
-                                <div className="relative z-10 pointer-events-none flex flex-col flex-1 p-4 gap-3">
-                                    <div>
-                                        <p className="font-headline font-semibold text-base leading-snug" style={{ color: '#0b1c30' }}>
-                                            {vehicle.make} {vehicle.model}
-                                        </p>
-                                        <p className="font-headline font-bold text-xl mt-1" style={{ color: '#0b1c30' }}>
-                                            {formatPrice(vehicle.price)}
-                                        </p>
-                                    </div>
-
-                                    {/* Specs */}
-                                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                                        <div className="flex items-center gap-1.5">
-                                            <Gauge className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
-                                            <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
-                                                {formatMileage(vehicle.mileage)} km
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Fuel className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
-                                            <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
-                                                {vehicle.fuel}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Settings2 className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
-                                            <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
-                                                {vehicle.transmission}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: '#3980f4' }} />
-                                            <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: '#45464d' }}>
-                                                Final {vehicle.plateEnding}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* CTA — pointer-events-auto re-enables clicks just for this button */}
-                                    {whatsappBase && (
-                                        <a
-                                            href={`${whatsappBase}?text=${encodeURIComponent(`Olá! Vi o anúncio do ${vehicle.make} ${vehicle.model} no site e gostaria de mais informações.`)}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="relative z-10 pointer-events-auto mt-auto w-full text-center py-2.5 rounded font-semibold text-white text-sm transition-opacity hover:opacity-90"
-                                            style={{ backgroundColor: '#006d2f' }}
-                                        >
-                                            Tenho Interesse
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <VehicleGrid
+                    vehicles={vehicles}
+                    dealershipSlug={dealership.slug}
+                    whatsappBase={whatsappBase}
+                />
             </main>
 
             {/* ── Footer ─────────────────────────────────────────────── */}
