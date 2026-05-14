@@ -11,6 +11,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 
 export const revalidate = 60;
 
@@ -62,11 +63,15 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
         ? `https://wa.me/55${dealership.phone.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappText)}`
         : null;
 
+    const palette = dealership.brandColors?.primary
+        ? buildBrandPalette(dealership.brandColors.primary)
+        : DEFAULT_PALETTE;
+
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#f8f9ff', color: '#0b1c30' }}>
 
             {/* ── Header ─────────────────────────────────────────────── */}
-            <header style={{ backgroundColor: '#131b2e' }} className="sticky top-0 z-50 shadow-lg">
+            <header style={{ backgroundColor: palette.header }} className="sticky top-0 z-50 shadow-lg">
                 <div className="mx-auto max-w-[1280px] px-4 md:px-16 py-4 flex items-center gap-4">
                     <Link
                         href={`/${dealership.slug}`}
@@ -80,7 +85,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                             <img src={dealership.logoUrl} alt={dealership.name} className="w-full h-full object-contain bg-white/10" />
                         </div>
                     ) : (
-                        <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0" style={{ backgroundColor: '#3980f4' }}>
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0" style={{ backgroundColor: palette.primary }}>
                             {dealership.name.substring(0, 2).toUpperCase()}
                         </div>
                     )}
@@ -101,13 +106,13 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                     <div className="lg:col-span-2 space-y-6">
 
                         {/* Gallery */}
-                        <div className="bg-white rounded-lg border overflow-hidden" style={{ borderColor: '#e5eeff' }}>
+                        <div className="bg-white rounded-lg border overflow-hidden" style={{ borderColor: palette.border }}>
                             {vehicle.images?.length > 0 ? (
                                 <Carousel className="w-full">
                                     <CarouselContent>
                                         {vehicle.images.map((img: string, i: number) => (
                                             <CarouselItem key={i}>
-                                                <div className="aspect-[4/3] md:aspect-video bg-[#e5eeff]">
+                                                <div className="aspect-[4/3] md:aspect-video" style={{ backgroundColor: palette.light }}>
                                                     <img
                                                         src={img}
                                                         alt={`${vehicle.make} ${vehicle.model} — foto ${i + 1}`}
@@ -125,7 +130,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                                     )}
                                 </Carousel>
                             ) : (
-                                <div className="aspect-video bg-[#e5eeff] flex items-center justify-center" style={{ color: '#45464d' }}>
+                                <div className="aspect-video flex items-center justify-center" style={{ backgroundColor: palette.light, color: '#45464d' }}>
                                     <svg className="w-16 h-16 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 17l-2-2m0 0l-2-2m2 2l2-2m0 0l2-2M3 9l1-4h16l1 4M3 9h18M5 9v8a2 2 0 002 2h10a2 2 0 002-2V9" />
                                     </svg>
@@ -134,13 +139,13 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                         </div>
 
                         {/* Specs table */}
-                        <div className="bg-white rounded-lg border p-6" style={{ borderColor: '#e5eeff' }}>
+                        <div className="bg-white rounded-lg border p-6" style={{ borderColor: palette.border }}>
                             <h2 className="font-headline font-semibold text-lg mb-4" style={{ color: '#0b1c30' }}>Especificações</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {specs(vehicle).map(({ icon: Icon, label, value }) => (
                                     <div key={label} className="flex items-start gap-3">
-                                        <div className="mt-0.5 p-2 rounded" style={{ backgroundColor: '#eff4ff' }}>
-                                            <Icon className="w-4 h-4" style={{ color: '#3980f4' }} />
+                                        <div className="mt-0.5 p-2 rounded" style={{ backgroundColor: palette.light }}>
+                                            <Icon className="w-4 h-4" style={{ color: palette.primary }} />
                                         </div>
                                         <div>
                                             <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: '#45464d' }}>{label}</p>
@@ -153,7 +158,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
 
                         {/* Description */}
                         {vehicle.description && (
-                            <div className="bg-white rounded-lg border p-6" style={{ borderColor: '#e5eeff' }}>
+                            <div className="bg-white rounded-lg border p-6" style={{ borderColor: palette.border }}>
                                 <h2 className="font-headline font-semibold text-lg mb-3" style={{ color: '#0b1c30' }}>Sobre o veículo</h2>
                                 <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#45464d' }}>
                                     {vehicle.description}
@@ -164,11 +169,11 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
 
                     {/* ── Right: Price card (sticky) ──────────────────── */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-24 bg-white rounded-lg border p-6 space-y-5" style={{ borderColor: '#e5eeff' }}>
+                        <div className="sticky top-24 bg-white rounded-lg border p-6 space-y-5" style={{ borderColor: palette.border }}>
                             <div>
                                 <span
                                     className="inline-block font-mono text-[10px] font-medium px-2 py-1 rounded-sm uppercase tracking-wider mb-3"
-                                    style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}
+                                    style={{ backgroundColor: palette.light, color: palette.primary }}
                                 >
                                     Disponível
                                 </span>
@@ -180,7 +185,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                                 </p>
                             </div>
 
-                            <div className="py-4 border-y" style={{ borderColor: '#e5eeff' }}>
+                            <div className="py-4 border-y" style={{ borderColor: palette.border }}>
                                 <p className="font-mono text-[10px] uppercase tracking-wider mb-1" style={{ color: '#45464d' }}>Preço</p>
                                 <p className="font-headline font-bold text-3xl" style={{ color: '#0b1c30' }}>
                                     {formatPrice(vehicle.price)}
@@ -225,7 +230,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
             </main>
 
             {/* ── Footer ─────────────────────────────────────────────── */}
-            <footer style={{ backgroundColor: '#131b2e' }} className="mt-16 py-8">
+            <footer style={{ backgroundColor: palette.header }} className="mt-16 py-8">
                 <div className="mx-auto max-w-[1280px] px-4 md:px-16 flex flex-col md:flex-row items-center justify-between gap-2">
                     <p className="text-white/60 text-sm">&copy; {new Date().getFullYear()} {dealership.name}. Todos os direitos reservados.</p>
                     <p className="text-white/40 text-xs">Powered by AutosDigital</p>
