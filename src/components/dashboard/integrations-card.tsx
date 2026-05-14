@@ -87,8 +87,8 @@ export function IntegrationsCard({
               <p className="text-xs mt-0.5" style={{ color: '#45464d' }}>Feed XML — sincronização automática a cada 6h</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}>
-            Feed ativo
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ backgroundColor: '#fffbeb', color: '#d97706' }}>
+            Pendente configuração
           </span>
         </div>
 
