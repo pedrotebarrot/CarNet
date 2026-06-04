@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { vehicleMakes, getYears } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
 import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
+import { compressImage, MAX_IMAGE_SIZE_BYTES, IMAGE_ACCEPT } from '@/lib/utils/compress-image';
 import { useToast } from '@/hooks/use-toast';
 
 import { useFirestore, useStorage } from '@/firebase';
@@ -46,6 +47,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [uploadProgress,    setUploadProgress]    = useState('');
   const [currentImages, setCurrentImages] = useState<string[]>(vehicle.images || []);
   
   const { toast } = useToast();
@@ -126,28 +128,57 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    
-    setIsUploadingImages(true);
+
     const files = Array.from(e.target.files);
+
+    // Validate sizes first
+    const oversized = files.filter(f => f.size > MAX_IMAGE_SIZE_BYTES);
+    if (oversized.length) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: `${oversized.map(f => f.name).join(', ')} ultrapassam 20 MB. Reduza o tamanho e tente novamente.`,
+        variant: 'destructive',
+      });
+      // Keep valid files only
+      const valid = files.filter(f => f.size <= MAX_IMAGE_SIZE_BYTES);
+      if (!valid.length) return;
+    }
+
+    const validFiles = files.filter(f => f.size <= MAX_IMAGE_SIZE_BYTES);
+    setIsUploadingImages(true);
     const newUrls = [...currentImages];
 
     try {
-      for (const file of files) {
-        const storageRef = ref(storage, `vehicles/${vehicle.dealershipId}/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+
+        // Compress
+        setUploadProgress(`Comprimindo foto ${i + 1} de ${validFiles.length}...`);
+        const compressed = await compressImage(file);
+
+        // Upload
+        setUploadProgress(`Enviando foto ${i + 1} de ${validFiles.length}...`);
+        const storageRef = ref(storage, `vehicles/${vehicle.dealershipId}/${Date.now()}_${compressed.name}`);
+        await uploadBytes(storageRef, compressed);
         const url = await getDownloadURL(storageRef);
         newUrls.push(url);
       }
+
       setCurrentImages(newUrls);
-      
       const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
-      await updateDoc(vehicleRef, { images: newUrls, updatedAt: new Date() });
-      
-      toast({ title: "Fotos enviadas!", description: `${files.length} novas fotos adicionadas.` });
-    } catch (error) {
-      toast({ title: "Erro no upload", variant: "destructive" });
+      await updateDoc(vehicleRef, {
+        images: newUrls,
+        featuredImage: newUrls[0] ?? null,
+        updatedAt: new Date(),
+      });
+      toast({ title: '✅ Fotos enviadas!', description: `${validFiles.length} foto${validFiles.length > 1 ? 's' : ''} adicionada${validFiles.length > 1 ? 's' : ''}.` });
+    } catch (error: any) {
+      toast({ title: 'Erro no upload', description: error.message ?? 'Tente novamente.', variant: 'destructive' });
     } finally {
       setIsUploadingImages(false);
+      setUploadProgress('');
+      // Reset input so the same file can be re-selected
+      e.target.value = '';
     }
   };
 
@@ -316,9 +347,21 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                     <span className="text-[10px] text-muted-foreground uppercase font-bold">Adicionar</span>
                   </>
                 )}
-                <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploadingImages} />
+                <input type="file" multiple accept={IMAGE_ACCEPT} className="hidden" onChange={handleImageUpload} disabled={isUploadingImages} />
               </label>
             </div>
+
+            {/* Upload progress */}
+            {uploadProgress && (
+              <div className="flex items-center gap-2 text-sm" style={{ color: '#45464d' }}>
+                <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" style={{ color: '#3980f4' }} />
+                {uploadProgress}
+              </div>
+            )}
+
+            <p className="text-xs" style={{ color: '#45464d' }}>
+              Formatos aceitos: JPEG, PNG, WebP e HEIC (fotos de iPhone) · Máx. 20 MB por foto · Compressão automática aplicada antes do envio
+            </p>
           </CardContent>
         </Card>
 

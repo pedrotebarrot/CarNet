@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { vehicleMakes, vehicleModels, getYears, VehicleMake, vehicleTransmissions } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
 import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
+import { compressImage, MAX_IMAGE_SIZE_BYTES, IMAGE_ACCEPT } from '@/lib/utils/compress-image';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -152,13 +153,21 @@ export function AddVehicleForm() {
 
     setIsSubmitting(true);
     try {
-      // Upload images
+      // Upload images — validate, compress then send
       const imageUrls = [];
       if (data.images && data.images.length > 0) {
-        for (let i = 0; i < data.images.length; i++) {
-          const file = data.images[i];
-          const storageRef = ref(storage, `vehicles/${userData.dealershipId}/${Date.now()}_${file.name}`);
-          await uploadBytes(storageRef, file);
+        const files = Array.from(data.images as FileList);
+        const validFiles = files.filter(f => {
+          if (f.size > MAX_IMAGE_SIZE_BYTES) {
+            toast({ title: `"${f.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
+            return false;
+          }
+          return true;
+        });
+        for (let i = 0; i < validFiles.length; i++) {
+          const compressed = await compressImage(validFiles[i]);
+          const storageRef = ref(storage, `vehicles/${userData.dealershipId}/${Date.now()}_${compressed.name}`);
+          await uploadBytes(storageRef, compressed);
           const url = await getDownloadURL(storageRef);
           imageUrls.push(url);
         }
@@ -574,7 +583,7 @@ export function AddVehicleForm() {
                 <Input
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept={IMAGE_ACCEPT}
                   onChange={(e) => onChange(e.target.files)}
                   {...rest}
                 />
