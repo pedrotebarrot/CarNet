@@ -19,6 +19,7 @@ interface Vehicle {
   transmission: string;
   plateEnding: string;
   images?: string[];
+  featuredImage?: string;
 }
 
 interface VehicleGridProps {
@@ -170,9 +171,9 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
 
               {/* Image */}
               <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: palette.light }}>
-                {vehicle.images?.[0] ? (
+                {(vehicle.featuredImage ?? vehicle.images?.[0]) ? (
                   <img
-                    src={vehicle.images[0]}
+                    src={(vehicle.featuredImage ?? vehicle.images?.[0])!}
                     alt={`${vehicle.make} ${vehicle.model}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { vehicleMakes, getYears } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
-import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
+import { generateInstagramCaption } from '@/ai/flows/generate-instagram-caption';
 import { useToast } from '@/hooks/use-toast';
 
 import { useFirestore, useStorage } from '@/firebase';
@@ -102,20 +102,13 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     const values = form.getValues();
     setIsGeneratingDescription(true);
     try {
-      const aiResult = await generateVehicleDescription({
-        make: values.make,
-        model: values.model,
+      const aiResult = await generateInstagramCaption({
+        ...values,
         year: parseInt(values.year),
         modelYear: parseInt(values.modelYear),
-        fuel: values.fuel,
-        doors: values.doors,
-        color: values.color,
-        transmission: values.transmission,
-        mileage: values.mileage,
-        price: values.price,
-        existingNotes: values.description || '',
+        description: values.description || '',
       });
-      form.setValue('description', aiResult.description, { shouldValidate: true });
+      form.setValue('description', aiResult.caption, { shouldValidate: true });
       toast({ title: "Descrição gerada!" });
     } catch (error) {
       toast({ title: "Erro na IA", variant: "destructive" });
@@ -156,11 +149,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     setCurrentImages(newImages);
     try {
       const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
-      await updateDoc(vehicleRef, {
-        images: newImages,
-        featuredImage: newImages[0] ?? null,
-        updatedAt: new Date(),
-      });
+      await updateDoc(vehicleRef, { images: newImages, updatedAt: new Date() });
       toast({ title: "Foto removida" });
     } catch (error) {
       toast({ title: "Erro ao atualizar", variant: "destructive" });
@@ -173,14 +162,11 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     const [coverImage] = newImages.splice(index, 1);
     newImages.unshift(coverImage);
     setCurrentImages(newImages);
+    
     try {
       const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
-      await updateDoc(vehicleRef, {
-        images: newImages,
-        featuredImage: newImages[0],
-        updatedAt: new Date(),
-      });
-      toast({ title: "✅ Capa definida!", description: "Essa foto será usada no site e no template do Instagram." });
+      await updateDoc(vehicleRef, { images: newImages, updatedAt: new Date() });
+      toast({ title: "Capa atualizada!" });
     } catch (error) {
       toast({ title: "Erro ao atualizar capa", variant: "destructive" });
     }
@@ -236,10 +222,6 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
             <CardDescription>Gerencie as imagens do veículo.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-xs mb-4" style={{ color: '#45464d' }}>
-              A <strong style={{ color: '#0b1c30' }}>1ª foto</strong> é a capa — aparece no site, no carrossel e no template do Instagram.
-              Passe o mouse em qualquer foto e clique em <strong style={{ color: '#0b1c30' }}>Tornar Capa</strong> para alterar.
-            </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               {currentImages.map((url, index) => (
                 <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border bg-muted">
@@ -298,11 +280,8 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   </div>
 
                   {index === 0 && (
-                    <div
-                      className="absolute top-2 left-2 font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded pointer-events-none z-10"
-                      style={{ backgroundColor: '#3980f4', color: '#fff' }}
-                    >
-                      ★ Capa
+                    <div className="absolute top-3 -left-8 w-32 bg-primary text-primary-foreground text-[10px] font-bold py-1 text-center -rotate-45 shadow-sm pointer-events-none tracking-widest z-10">
+                      CAPA
                     </div>
                   )}
                 </div>

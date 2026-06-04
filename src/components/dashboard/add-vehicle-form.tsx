@@ -170,6 +170,7 @@ export function AddVehicleForm() {
         mileage: Number(data.mileage),
         doors: Number(data.doors),
         images: imageUrls,
+        featuredImage: imageUrls[0] ?? null,
         dealershipId: userData.dealershipId,
         createdAt: new Date(),
         updatedAt: new Date(),
