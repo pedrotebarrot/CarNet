@@ -633,40 +633,31 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="mx-auto max-w-md">
+            <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
+
+              {/* ── Monthly ── */}
               <div
-                className="rounded-2xl border p-8 relative overflow-hidden"
-                style={{ borderColor: '#3980f4', backgroundColor: '#fff', boxShadow: '0 8px 40px rgba(57,128,244,0.12)' }}
+                className="rounded-2xl border bg-white p-8 flex flex-col"
+                style={{ borderColor: '#e5eeff' }}
               >
-                {/* Popular badge */}
-                <div
-                  className="absolute top-0 right-8 font-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-b"
-                  style={{ backgroundColor: '#3980f4', color: '#fff' }}
-                >
-                  Plano único
-                </div>
-
                 <div className="mb-6">
-                  <p className="font-headline font-semibold text-lg mb-1" style={{ color: '#0b1c30' }}>Plano Profissional</p>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#45464d' }}>Mensal</p>
                   <div className="flex items-end gap-1.5">
-                    <span className="font-headline font-bold text-5xl" style={{ color: '#0b1c30' }}>R$ 637</span>
-                    <span className="text-base mb-1.5" style={{ color: '#45464d' }}>/mês</span>
+                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 420</span>
+                    <span className="text-base mb-1" style={{ color: '#45464d' }}>/mês</span>
                   </div>
-                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>por revenda · cancele quando quiser</p>
+                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>Cobrado mensalmente · cancele quando quiser</p>
                 </div>
 
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2.5 mb-8 flex-1">
                   {[
-                    'Site profissional com URL exclusiva',
+                    'Todas as funcionalidades inclusas',
+                    'Site com URL exclusiva da loja',
                     'Estoque ilimitado de veículos',
-                    'Publicação no OLX e Mercado Livre',
-                    'Posts para Instagram gerados por IA',
-                    'Busca automática de dados pela placa',
-                    'Identidade visual com cores da marca',
-                    'Catálogo online para compartilhar',
+                    'OLX + Mercado Livre + Instagram IA',
                     'Suporte via WhatsApp',
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-sm" style={{ color: '#0b1c30' }}>
+                    <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: '#0b1c30' }}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#006d2f' }} />
                       {item}
                     </li>
@@ -675,28 +666,73 @@ export default function Home() {
 
                 <Link
                   href="/signup"
-                  className="flex items-center justify-center gap-2 w-full rounded-lg py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#006d2f' }}
+                  className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-semibold transition-colors hover:bg-[#eff4ff]"
+                  style={{ border: '1.5px solid #3980f4', color: '#3980f4' }}
                 >
                   Começar agora
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-
-                <p className="mt-4 text-center text-xs" style={{ color: '#45464d' }}>
-                  Sem cartão de crédito para começar · Suporte incluso
-                </p>
               </div>
 
-              {/* ROI note */}
+              {/* ── Annual (highlighted) ── */}
               <div
-                className="mt-6 rounded-lg border px-5 py-4 text-center"
-                style={{ borderColor: '#e5eeff', backgroundColor: '#f0f7ff' }}
+                className="rounded-2xl border p-8 flex flex-col relative overflow-hidden"
+                style={{ borderColor: '#3980f4', backgroundColor: '#fff', boxShadow: '0 8px 40px rgba(57,128,244,0.14)' }}
               >
-                <p className="text-sm" style={{ color: '#0b1c30' }}>
-                  💡 <strong>Conta rapidinho:</strong> se o site trouxer <strong>1 venda a mais por mês</strong>, o plano
-                  já se paga — e sobra.
-                </p>
+                {/* Best value badge */}
+                <div
+                  className="absolute top-0 right-8 font-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-b"
+                  style={{ backgroundColor: '#006d2f', color: '#fff' }}
+                >
+                  Melhor valor
+                </div>
+
+                <div className="mb-6">
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#3980f4' }}>Anual</p>
+                  <div className="flex items-end gap-1.5">
+                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 350</span>
+                    <span className="text-base mb-1" style={{ color: '#45464d' }}>/mês</span>
+                  </div>
+                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>
+                    R$ 4.200 cobrado anualmente ·{' '}
+                    <span style={{ color: '#006d2f', fontWeight: 600 }}>economize R$ 840/ano</span>
+                  </p>
+                </div>
+
+                <ul className="space-y-2.5 mb-8 flex-1">
+                  {[
+                    'Tudo do plano mensal',
+                    '2 meses grátis no ano',
+                    'Prioridade no suporte',
+                    'Acesso antecipado a novidades',
+                    'Desconto garantido por 12 meses',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: '#0b1c30' }}>
+                      <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#006d2f' }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/signup"
+                  className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-bold text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#006d2f' }}
+                >
+                  Assinar plano anual
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
+            </div>
+
+            {/* ROI note */}
+            <div
+              className="mx-auto mt-8 max-w-xl rounded-lg border px-5 py-4 text-center"
+              style={{ borderColor: '#e5eeff', backgroundColor: '#f0f7ff' }}
+            >
+              <p className="text-sm" style={{ color: '#0b1c30' }}>
+                💡 <strong>Conta rápida:</strong> se o site trouxer <strong>1 venda a mais por mês</strong>, o plano já se paga — e sobra muito.
+              </p>
             </div>
           </div>
         </section>
