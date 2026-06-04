@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { vehicleMakes, getYears } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
-import { generateInstagramCaption } from '@/ai/flows/generate-instagram-caption';
+import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
 import { useToast } from '@/hooks/use-toast';
 
 import { useFirestore, useStorage } from '@/firebase';
@@ -102,13 +102,20 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     const values = form.getValues();
     setIsGeneratingDescription(true);
     try {
-      const aiResult = await generateInstagramCaption({
-        ...values,
+      const aiResult = await generateVehicleDescription({
+        make: values.make,
+        model: values.model,
         year: parseInt(values.year),
         modelYear: parseInt(values.modelYear),
-        description: values.description || '',
+        fuel: values.fuel,
+        doors: values.doors,
+        color: values.color,
+        transmission: values.transmission,
+        mileage: values.mileage,
+        price: values.price,
+        existingNotes: values.description || '',
       });
-      form.setValue('description', aiResult.caption, { shouldValidate: true });
+      form.setValue('description', aiResult.description, { shouldValidate: true });
       toast({ title: "Descrição gerada!" });
     } catch (error) {
       toast({ title: "Erro na IA", variant: "destructive" });

@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { vehicleMakes, vehicleModels, getYears, VehicleMake, vehicleTransmissions } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
-import { generateInstagramCaption } from '@/ai/flows/generate-instagram-caption';
+import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -120,7 +120,7 @@ export function AddVehicleForm() {
 
     setIsGeneratingDescription(true);
     try {
-      const aiResult = await generateInstagramCaption({
+      const aiResult = await generateVehicleDescription({
         make: values.make,
         model: values.model,
         year: parseInt(values.year) || 0,
@@ -129,12 +129,11 @@ export function AddVehicleForm() {
         doors: values.doors,
         color: values.color,
         transmission: values.transmission,
-        plateEnding: values.plateEnding,
         mileage: values.mileage,
         price: values.price,
-        description: values.description || '',
+        existingNotes: values.description || '',
       });
-      form.setValue('description', aiResult.caption, { shouldValidate: true });
+      form.setValue('description', aiResult.description, { shouldValidate: true });
       toast({ title: "Descrição gerada!", description: "O texto foi criado com base nos dados do veículo." });
     } catch (error) {
       console.error('AI description generation failed:', error);

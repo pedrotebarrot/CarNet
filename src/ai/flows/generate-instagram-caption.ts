@@ -48,24 +48,30 @@ export async function generateInstagramCaption(input: GenerateInstagramCaptionIn
     },
   });
 
-  const prompt = `Você é um especialista em marketing de redes sociais para lojas de veículos no Brasil. Gere uma legenda engajadora para Instagram para o seguinte carro em estoque, incluindo um call to action forte convidando o cliente a visitar a loja.
+  const km = input.mileage.toLocaleString('pt-BR');
+  const price = (input.price / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
-**Ficha Técnica do Veículo:**
-Marca: ${input.make}
-Modelo FIPE: ${input.model}
+  const prompt = `Você é um especialista em marketing de redes sociais para revendas de veículos no Brasil.
+
+Escreva uma legenda para Instagram para o veículo abaixo.
+
+## Dados do Veículo
+Marca/Modelo: ${input.make} ${input.model}
 Ano: ${input.year}/${input.modelYear}
 Detalhes: ${input.color}, ${input.doors} Portas, Câmbio ${input.transmission}, Combustível ${input.fuel}
+Quilometragem: ${km} km
+Preço: ${price}
 Placa Final: ${input.plateEnding}
-Quilometragem: ${input.mileage} km
-Preço: R$ ${(input.price / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-Informações do Lojista: ${input.description}
+Descrição do vendedor: ${input.description}
 
-A legenda deve:
-- Ser em português brasileiro
-- Usar emojis de forma estratégica
-- Destacar os pontos fortes do veículo
-- Ter hashtags relevantes no final
-- Incluir call to action`;
+## Regras obrigatórias
+
+1. **Emojis**: use com moderação — no máximo 3 emojis em toda a legenda, apenas no início de linhas ou antes de informações-chave. NUNCA no meio de uma frase.
+2. **Tom**: direto e confiante. Público-alvo são compradores adultos que pesquisam carros com critério. Sem linguagem juvenil.
+3. **Estrutura**: 2 a 3 parágrafos curtos + hashtags no final.
+4. **Conteúdo**: primeiro parágrafo apresenta o carro com os destaques. Segundo parágrafo tem o preço e condições. Último parágrafo é o call to action para entrar em contato.
+5. **Hashtags**: 5 a 8 hashtags relevantes no final (marca, modelo, estado, carros usados). Separadas por espaço.
+6. **Idioma**: português brasileiro. Sem gírias excessivas.`;
 
   const generateWithRetry = async (attempts = 2): Promise<string> => {
     try {
