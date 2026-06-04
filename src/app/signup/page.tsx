@@ -58,10 +58,6 @@ export default function SignupPage() {
       toast({ title: 'Senha muito curta', description: 'A senha deve ter pelo menos 6 caracteres.', variant: 'destructive' });
       return;
     }
-    if (!logoFile) {
-      toast({ title: 'Logo obrigatória', description: 'Por favor, faça o upload da logo da sua revenda.', variant: 'destructive' });
-      return;
-    }
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -69,12 +65,16 @@ export default function SignupPage() {
       const baseSlug = generateSlug(dealershipName);
       const uniqueSlug = await ensureUniqueSlug(baseSlug);
 
-      const storageRef = ref(storage, `logos/${uniqueSlug}/${logoFile.name}`);
-      await uploadBytes(storageRef, logoFile);
-      const logoUrl = await getDownloadURL(storageRef);
+      let logoUrl: string | null = null;
+      if (logoFile) {
+        const storageRef = ref(storage, `logos/${uniqueSlug}/${logoFile.name}`);
+        await uploadBytes(storageRef, logoFile);
+        logoUrl = await getDownloadURL(storageRef);
+      }
 
       const dealershipRef = doc(collection(firestore, 'dealerships'));
       const dealershipId = dealershipRef.id;
+      const appUrl = window.location.origin;
 
       await setDoc(dealershipRef, {
         id: dealershipId, name: dealershipName, slug: uniqueSlug,
@@ -84,7 +84,7 @@ export default function SignupPage() {
         id: user.uid, email: user.email, dealershipId, role: 'admin',
       });
 
-      toast({ title: 'Conta criada com sucesso!', description: `Seu site está pronto em: autosdigital.com/${uniqueSlug}` });
+      toast({ title: '🎉 Conta criada!', description: `Seu site está no ar: ${appUrl}/${uniqueSlug}` });
       router.push('/dashboard');
     } catch (error: any) {
       toast({ title: 'Erro ao criar conta', description: error.message || 'Ocorreu um erro.', variant: 'destructive' });
@@ -121,7 +121,10 @@ export default function SignupPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="logo" className="text-sm font-medium" style={{ color: '#0b1c30' }}>Logo da Empresa</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="logo" className="text-sm font-medium" style={{ color: '#0b1c30' }}>Logo da Empresa</Label>
+                <span className="text-xs" style={{ color: '#45464d' }}>Opcional — pode adicionar depois</span>
+              </div>
               <div className="flex items-center gap-4">
                 <div
                   className="flex h-16 w-16 shrink-0 items-center justify-center rounded overflow-hidden border border-dashed"

@@ -618,6 +618,89 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── Pricing ──────────────────────────────────────────────────────── */}
+        <section className="py-20 md:py-28" style={{ backgroundColor: '#f8f9ff' }}>
+          <div className="mx-auto max-w-[1280px] px-4 md:px-16">
+            <div className="mx-auto mb-14 max-w-2xl text-center">
+              <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}>
+                Planos
+              </span>
+              <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
+                Simples e sem surpresas
+              </h2>
+              <p className="mt-4 text-base" style={{ color: '#45464d' }}>
+                Um plano com tudo incluído. Sem taxas escondidas, sem contrato de fidelidade.
+              </p>
+            </div>
+
+            <div className="mx-auto max-w-md">
+              <div
+                className="rounded-2xl border p-8 relative overflow-hidden"
+                style={{ borderColor: '#3980f4', backgroundColor: '#fff', boxShadow: '0 8px 40px rgba(57,128,244,0.12)' }}
+              >
+                {/* Popular badge */}
+                <div
+                  className="absolute top-0 right-8 font-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-b"
+                  style={{ backgroundColor: '#3980f4', color: '#fff' }}
+                >
+                  Plano único
+                </div>
+
+                <div className="mb-6">
+                  <p className="font-headline font-semibold text-lg mb-1" style={{ color: '#0b1c30' }}>Plano Profissional</p>
+                  <div className="flex items-end gap-1.5">
+                    <span className="font-headline font-bold text-5xl" style={{ color: '#0b1c30' }}>R$ 637</span>
+                    <span className="text-base mb-1.5" style={{ color: '#45464d' }}>/mês</span>
+                  </div>
+                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>por revenda · cancele quando quiser</p>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Site profissional com URL exclusiva',
+                    'Estoque ilimitado de veículos',
+                    'Publicação no OLX e Mercado Livre',
+                    'Posts para Instagram gerados por IA',
+                    'Busca automática de dados pela placa',
+                    'Identidade visual com cores da marca',
+                    'Catálogo online para compartilhar',
+                    'Suporte via WhatsApp',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm" style={{ color: '#0b1c30' }}>
+                      <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#006d2f' }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/signup"
+                  className="flex items-center justify-center gap-2 w-full rounded-lg py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#006d2f' }}
+                >
+                  Começar agora
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                <p className="mt-4 text-center text-xs" style={{ color: '#45464d' }}>
+                  Sem cartão de crédito para começar · Suporte incluso
+                </p>
+              </div>
+
+              {/* ROI note */}
+              <div
+                className="mt-6 rounded-lg border px-5 py-4 text-center"
+                style={{ borderColor: '#e5eeff', backgroundColor: '#f0f7ff' }}
+              >
+                <p className="text-sm" style={{ color: '#0b1c30' }}>
+                  💡 <strong>Conta rapidinho:</strong> se o site trouxer <strong>1 venda a mais por mês</strong>, o plano
+                  já se paga — e sobra.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── CTA Banner ───────────────────────────────────────────────────── */}
         <section
           className="py-24 md:py-32 relative overflow-hidden"
