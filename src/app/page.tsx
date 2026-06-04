@@ -790,6 +790,8 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
               <Link href="/login" className="hover:text-white transition-colors">Entrar</Link>
               <Link href="/signup" className="hover:text-white transition-colors">Criar conta</Link>
+              <Link href="/termos" className="hover:text-white transition-colors">Termos de Uso</Link>
+              <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>
               <span className="hidden md:block">·</span>
               <p>© {new Date().getFullYear()} AutosDigital. Todos os direitos reservados.</p>
             </div>

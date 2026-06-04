@@ -181,6 +181,13 @@ export default function SignupPage() {
               Entrar
             </Link>
           </p>
+
+          <p className="mt-4 text-center text-xs" style={{ color: '#45464d' }}>
+            Ao criar sua conta você concorda com os{' '}
+            <Link href="/termos" target="_blank" className="underline" style={{ color: '#3980f4' }}>Termos de Uso</Link>
+            {' '}e a{' '}
+            <Link href="/privacidade" target="_blank" className="underline" style={{ color: '#3980f4' }}>Política de Privacidade</Link>.
+          </p>
         </div>
       </div>
     </div>
