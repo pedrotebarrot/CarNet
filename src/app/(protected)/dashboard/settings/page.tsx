@@ -283,6 +283,7 @@ export default function SettingsPage() {
                             dealershipSlug={dealershipData.slug}
                             mlConnected={dealershipData?.integrations?.mercadolivre?.connected === true}
                             mlUserId={dealershipData?.integrations?.mercadolivre?.userId}
+                            olxConnected={dealershipData?.integrations?.olx?.connected === true}
                         />
                     </Suspense>
                 </div>
