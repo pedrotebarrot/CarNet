@@ -24,7 +24,7 @@ import { useFirestore, useStorage } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { publishVehicleToML, unpublishVehicleFromML } from '@/actions/mercadolivre';
-import { publishVehicleToOlx } from '@/actions/olx';
+import { publishVehicleToOlx, unpublishVehicleFromOlx } from '@/actions/olx';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7).max(7),
@@ -55,7 +55,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const [currentImages, setCurrentImages] = useState<string[]>(vehicle.images || []);
   const [mlData,  setMlData]  = useState<any>(vehicle.marketplace?.mercadolivre ?? null);
   const [isMLLoading,  setIsMLLoading]  = useState(false);
-  const [olxData, setOlxData] = useState<any>(vehicle.publishedTo?.olx ?? null);
+  const [olxEnabled,   setOlxEnabled]   = useState<boolean>(vehicle.olxEnabled === true);
   const [isOLXLoading, setIsOLXLoading] = useState(false);
   
   const { toast } = useToast();
@@ -255,35 +255,34 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   };
 
   const handlePublishOLX = async () => {
-    const values = form.getValues();
     setIsOLXLoading(true);
     try {
       const result = await publishVehicleToOlx({
         dealershipId: vehicle.dealershipId,
         vehicleId:    vehicle.id,
-        make:         values.make,
-        model:        values.model,
-        year:         Number(values.year),
-        modelYear:    Number(values.modelYear),
-        price:        Number(values.price),
-        mileage:      Number(values.mileage),
-        fuel:         values.fuel,
-        transmission: values.transmission,
-        color:        values.color,
-        doors:        Number(values.doors),
-        plate:        values.plate,
-        plateEnding:  values.plateEnding,
-        description:  values.description,
-        images:       currentImages,
+        make: '', model: '', year: 0, fuel: '', transmission: '', color: '',
       });
       if (result.success) {
-        setOlxData({ adId: result.adId, publishedAt: new Date() });
-        toast({ title: "Publicado na OLX!", description: "Anúncio criado com sucesso." });
+        setOlxEnabled(true);
+        toast({ title: "✅ Adicionado ao feed OLX!", description: "Será sincronizado na próxima atualização da OLX." });
       } else {
-        toast({ title: "Erro ao publicar na OLX", description: result.error, variant: "destructive" });
+        toast({ title: "Erro ao ativar na OLX", description: result.error, variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Erro ao publicar na OLX", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao ativar na OLX", description: err.message, variant: "destructive" });
+    } finally {
+      setIsOLXLoading(false);
+    }
+  };
+
+  const handleUnpublishOLX = async () => {
+    setIsOLXLoading(true);
+    try {
+      await unpublishVehicleFromOlx(vehicle.id);
+      setOlxEnabled(false);
+      toast({ title: "Removido do feed OLX." });
+    } catch (err: any) {
+      toast({ title: "Erro ao remover da OLX", description: err.message, variant: "destructive" });
     } finally {
       setIsOLXLoading(false);
     }
@@ -524,13 +523,15 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {olxData?.adId ? (
+            {olxEnabled ? (
               <>
                 <div className="flex items-center gap-2 text-sm" style={{ color: '#065f46' }}>
                   <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                  Anúncio publicado
+                  Ativo no feed OLX
                 </div>
-                <p className="text-xs font-mono" style={{ color: '#45464d' }}>ID: {olxData.adId}</p>
+                <p className="text-xs" style={{ color: '#45464d' }}>
+                  Este veículo está incluso no feed e será sincronizado com a OLX.
+                </p>
                 <a
                   href="https://www.olx.com.br/minha-conta/meus-anuncios"
                   target="_blank"
@@ -538,11 +539,26 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   className="inline-flex items-center gap-1 text-xs underline"
                   style={{ color: '#3980f4' }}
                 >
-                  Ver na OLX <ExternalLink className="h-3 w-3" />
+                  Ver meus anúncios <ExternalLink className="h-3 w-3" />
                 </a>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  onClick={handleUnpublishOLX}
+                  disabled={isOLXLoading}
+                >
+                  {isOLXLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  Remover do feed OLX
+                </Button>
               </>
             ) : (
               <>
+                <p className="text-xs" style={{ color: '#45464d' }}>
+                  Veículo não está no feed da OLX.
+                </p>
                 <Button
                   type="button"
                   size="sm"
@@ -552,11 +568,8 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   disabled={isOLXLoading}
                 >
                   {isOLXLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                  Publicar na OLX
+                  Adicionar ao feed OLX
                 </Button>
-                <p className="text-xs" style={{ color: '#45464d' }}>
-                  A conta da OLX precisa estar conectada em Configurações.
-                </p>
               </>
             )}
           </CardContent>

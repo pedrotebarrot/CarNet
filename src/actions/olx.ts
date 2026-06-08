@@ -104,83 +104,31 @@ async function getOlxToken(dealershipId: string): Promise<string | null> {
   return olx.accessToken as string;
 }
 
-// ─── Publish vehicle to OLX ──────────────────────────────────────────────────
+// ─── Enable vehicle in OLX feed ──────────────────────────────────────────────
+//
+// OLX auto-upload uses a pull/feed model: OLX periodically fetches our JSON
+// feed and syncs the inventory. We do NOT push individual ads via REST API.
+// Instead, we flag each vehicle with `olxEnabled: true` and our feed endpoint
+// (/api/olx/feed) filters on that flag. The next OLX sync picks it up.
 
 export async function publishVehicleToOlx(v: PublishVehicleToOlxInput): Promise<OlxPublishResult> {
-  const token = await getOlxToken(v.dealershipId);
-  if (!token) return { success: false, error: 'OLX não conectado. Conecte sua conta em Configurações.' };
+  const db = getAdminDb();
 
-  const db        = getAdminDb();
-  const dSnap     = await db.doc(`dealerships/${v.dealershipId}`).get();
-  const dealership = { id: v.dealershipId, ...(dSnap.data() ?? {}) } as any;
-
-  const priceReais = Math.round((v.price ?? 0) / 100);
-  const mileage    = Math.max(0, v.mileage ?? 0);
-  const images     = (v.images ?? []).slice(0, 20);
-
-  const subject = `${v.make} ${v.model} ${v.year}/${v.modelYear ?? v.year}`;
-  const body    =
-    v.description ||
-    `${subject} — ${mileage.toLocaleString('pt-BR')} km, ${v.fuel}, ${v.transmission}, ${v.color}` +
-    (v.doors ? `, ${v.doors} portas` : '') +
-    (v.plateEnding ? `. Final de placa: ${v.plateEnding}` : '') +
-    '.';
-
-  // OLX auto-upload JSON format
-  const payload: Record<string, any> = {
-    subject,
-    body,
-    category: { id: '2020' }, // Carros, Vans e Utilitários
-    price:    priceReais > 0 ? { price: priceReais, negotiable: '1' } : { negotiable: '1' },
-    phone:    { phone: dealership.phone ?? '', phone_hidden: '0' },
-    params:   {
-      cartype:      [{ key: 'carros_e_caminhonetes' }],
-      marca:        v.make,
-      modelo:       v.model,
-      regiao:       [{ key: dealership.city ?? '' }],
-      fuel:         [{ key: mapOlxFuel(v.fuel) }],
-      car_color:    [{ key: v.color.toLowerCase() }],
-      gearbox:      [{ key: mapOlxTransmission(v.transmission) }],
-      ...(v.doors    ? { doors:    [{ key: String(v.doors) }] }    : {}),
-      ...(mileage    ? { mileage:  [{ key: String(Math.round(mileage / 1000) * 1000) }] } : {}),
-      ...(v.year     ? { car_year: [{ key: String(v.year) }] }     : {}),
-    },
-    images: images.map((url, i) => ({ url, label: i === 0 ? 'capa' : String(i) })),
-  };
-
-  const res = await fetch('https://api.olx.com.br/autoupload/v1.0/insertado', {
-    method:  'POST',
-    headers: {
-      Authorization:  `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+  // Just flag the vehicle as enabled in the OLX feed
+  await db.doc(`vehicles/${v.vehicleId}`).update({
+    olxEnabled:       true,
+    'publishedTo.olx': { enabledAt: new Date() },
   });
 
-  if (!res.ok) {
-    let errText = '';
-    try { errText = await res.text(); } catch { /* ignore */ }
-    // Try to parse JSON error from OLX
-    let errMsg = errText;
-    try {
-      const parsed = JSON.parse(errText);
-      errMsg = parsed?.error ?? parsed?.message ?? parsed?.description ?? errText;
-    } catch { /* plain text */ }
-    console.error(`OLX publish error [${res.status}]:`, errText);
-    return { success: false, error: `HTTP ${res.status}: ${String(errMsg).slice(0, 300)}` };
-  }
+  return { success: true };
+}
 
-  const result = await res.json();
-  const adId   = result?.ad_id ?? result?.id ?? result?.listId;
-
-  // Save OLX ad ID on vehicle doc
-  if (adId) {
-    await db.doc(`vehicles/${v.vehicleId}`).update({
-      'publishedTo.olx': { adId, publishedAt: new Date() },
-    });
-  }
-
-  return { success: true, adId };
+export async function unpublishVehicleFromOlx(vehicleId: string): Promise<void> {
+  const db = getAdminDb();
+  await db.doc(`vehicles/${vehicleId}`).update({
+    olxEnabled:       false,
+    'publishedTo.olx': null,
+  });
 }
 
 // ─── Disconnect OLX ──────────────────────────────────────────────────────────

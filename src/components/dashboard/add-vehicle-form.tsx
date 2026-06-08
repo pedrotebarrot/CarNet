@@ -24,7 +24,6 @@ import { useUser, useFirestore, useStorage, useDoc } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { publishVehicleToML } from '@/actions/mercadolivre';
-import { publishVehicleToOlx } from '@/actions/olx';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(7, { message: 'A placa deve ter 7 caracteres.' }),
@@ -194,6 +193,7 @@ export function AddVehicleForm() {
         images: imageUrls,
         featuredImage: imageUrls[0] ?? null,
         dealershipId: userData.dealershipId,
+        olxEnabled: publishToOLX && olxConnected,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -229,31 +229,9 @@ export function AddVehicleForm() {
         }
       }
 
-      // Publicar na OLX se o toggle estiver ativo
+      // OLX: flag já foi salvo no vehicleDoc acima (olxEnabled: true)
       if (publishToOLX && olxConnected) {
-        const olxResult = await publishVehicleToOlx({
-          dealershipId: userData.dealershipId,
-          vehicleId:    vehicleDoc.id,
-          make:         data.make,
-          model:        data.model,
-          year:         Number(data.year),
-          modelYear:    Number(data.modelYear),
-          price:        Number(data.price),
-          mileage:      Number(data.mileage),
-          fuel:         data.fuel,
-          transmission: data.transmission,
-          color:        data.color,
-          doors:        Number(data.doors),
-          plate:        data.plate,
-          plateEnding:  data.plateEnding,
-          description:  data.description,
-          images:       imageUrls,
-        });
-        if (olxResult.success) {
-          toast({ title: "Publicado na OLX!", description: "Anúncio criado com sucesso." });
-        } else {
-          toast({ title: "Veículo salvo, mas erro na OLX", description: olxResult.error, variant: "destructive" });
-        }
+        toast({ title: "✅ Adicionado ao feed OLX!", description: "Será sincronizado na próxima atualização da OLX." });
       }
 
       form.reset();

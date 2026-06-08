@@ -45,12 +45,13 @@ export async function GET(request: NextRequest) {
   if (dSnap.empty) return new NextResponse('Not found', { status: 404 });
   const dealership = { id: dSnap.docs[0].id, ...dSnap.docs[0].data() } as any;
 
-  // Fetch available vehicles
+  // Fetch vehicles enabled for OLX (available + olxEnabled)
   const vSnap = await getDocs(
     query(
       collection(db, 'vehicles'),
       where('dealershipId', '==', dealership.id),
-      where('status', '==', 'available')
+      where('status',     '==', 'available'),
+      where('olxEnabled', '==', true)
     )
   );
   const vehicles = vSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
