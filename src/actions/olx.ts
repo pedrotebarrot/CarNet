@@ -158,9 +158,16 @@ export async function publishVehicleToOlx(v: PublishVehicleToOlxInput): Promise<
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    console.error('OLX publish error:', errText);
-    return { success: false, error: `OLX: ${errText.slice(0, 300)}` };
+    let errText = '';
+    try { errText = await res.text(); } catch { /* ignore */ }
+    // Try to parse JSON error from OLX
+    let errMsg = errText;
+    try {
+      const parsed = JSON.parse(errText);
+      errMsg = parsed?.error ?? parsed?.message ?? parsed?.description ?? errText;
+    } catch { /* plain text */ }
+    console.error(`OLX publish error [${res.status}]:`, errText);
+    return { success: false, error: `HTTP ${res.status}: ${String(errMsg).slice(0, 300)}` };
   }
 
   const result = await res.json();
