@@ -24,6 +24,7 @@ import { useUser, useFirestore, useStorage, useDoc } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { publishVehicleToML } from '@/actions/mercadolivre';
+import { publishVehicleToOlx } from '@/actions/olx';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(7, { message: 'A placa deve ter 7 caracteres.' }),
@@ -50,7 +51,8 @@ export function AddVehicleForm() {
   const [isPlateLoading, setIsPlateLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
-  const [publishToML, setPublishToML] = useState(false);
+  const [publishToML,  setPublishToML]  = useState(false);
+  const [publishToOLX, setPublishToOLX] = useState(false);
   const [previewItems, setPreviewItems] = useState<PhotoItem[]>([]);
   const [fileMap] = useState<Map<string, File>>(new Map());
   const { toast } = useToast();
@@ -71,7 +73,8 @@ export function AddVehicleForm() {
     [userData, firestore]
   );
   const { data: dealershipData } = useDoc(dealershipDocRef);
-  const mlConnected = dealershipData?.integrations?.mercadolivre?.connected === true;
+  const mlConnected  = dealershipData?.integrations?.mercadolivre?.connected === true;
+  const olxConnected = dealershipData?.integrations?.olx?.connected === true;
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
@@ -226,9 +229,38 @@ export function AddVehicleForm() {
         }
       }
 
+      // Publicar na OLX se o toggle estiver ativo
+      if (publishToOLX && olxConnected) {
+        const olxResult = await publishVehicleToOlx({
+          dealershipId: userData.dealershipId,
+          vehicleId:    vehicleDoc.id,
+          make:         data.make,
+          model:        data.model,
+          year:         Number(data.year),
+          modelYear:    Number(data.modelYear),
+          price:        Number(data.price),
+          mileage:      Number(data.mileage),
+          fuel:         data.fuel,
+          transmission: data.transmission,
+          color:        data.color,
+          doors:        Number(data.doors),
+          plate:        data.plate,
+          plateEnding:  data.plateEnding,
+          description:  data.description,
+          images:       imageUrls,
+        });
+        if (olxResult.success) {
+          toast({ title: "Publicado na OLX!", description: "Anúncio criado com sucesso." });
+        } else {
+          toast({ title: "Veículo salvo, mas erro na OLX", description: olxResult.error, variant: "destructive" });
+        }
+      }
+
       form.reset();
       setPreviewItems([]);
       fileMap.clear();
+      setPublishToML(false);
+      setPublishToOLX(false);
 
     } catch (error: any) {
       console.error("Error saving vehicle:", error);
@@ -668,14 +700,35 @@ export function AddVehicleForm() {
           </div>
         )}
 
+        {olxConnected && (
+          <div
+            className="flex items-center justify-between rounded-lg border p-4"
+            style={{ borderColor: publishToOLX ? '#FF6B00' : '#e5eeff', backgroundColor: publishToOLX ? '#fff4ee' : '#f8f9ff' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md font-bold text-white text-[10px]" style={{ backgroundColor: '#FF6B00' }}>
+                OLX
+              </div>
+              <div>
+                <p className="text-sm font-medium" style={{ color: '#0b1c30' }}>Publicar na OLX</p>
+                <p className="text-xs" style={{ color: '#45464d' }}>O anúncio será criado automaticamente ao salvar</p>
+              </div>
+            </div>
+            <Switch checked={publishToOLX} onCheckedChange={setPublishToOLX} />
+          </div>
+        )}
+
         <Button type="submit" disabled={isSubmitting || !userData}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {publishToML ? 'Salvando e publicando...' : 'Salvando...'}
+              {publishToML || publishToOLX ? 'Salvando e publicando...' : 'Salvando...'}
             </>
           ) : (
-            publishToML ? 'Salvar e Publicar no ML' : 'Salvar Veículo'
+            publishToML && publishToOLX ? 'Salvar, publicar no ML e OLX'
+            : publishToML               ? 'Salvar e Publicar no ML'
+            : publishToOLX              ? 'Salvar e Publicar na OLX'
+            :                             'Salvar Veículo'
           )}
         </Button>
       </form>

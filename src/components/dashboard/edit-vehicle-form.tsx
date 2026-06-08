@@ -24,6 +24,7 @@ import { useFirestore, useStorage } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { publishVehicleToML, unpublishVehicleFromML } from '@/actions/mercadolivre';
+import { publishVehicleToOlx } from '@/actions/olx';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7).max(7),
@@ -52,8 +53,10 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadProgress,    setUploadProgress]    = useState('');
   const [currentImages, setCurrentImages] = useState<string[]>(vehicle.images || []);
-  const [mlData, setMlData] = useState<any>(vehicle.marketplace?.mercadolivre ?? null);
-  const [isMLLoading, setIsMLLoading] = useState(false);
+  const [mlData,  setMlData]  = useState<any>(vehicle.marketplace?.mercadolivre ?? null);
+  const [isMLLoading,  setIsMLLoading]  = useState(false);
+  const [olxData, setOlxData] = useState<any>(vehicle.publishedTo?.olx ?? null);
+  const [isOLXLoading, setIsOLXLoading] = useState(false);
   
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -248,6 +251,41 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
       toast({ title: "Erro ao encerrar", description: err.message, variant: "destructive" });
     } finally {
       setIsMLLoading(false);
+    }
+  };
+
+  const handlePublishOLX = async () => {
+    const values = form.getValues();
+    setIsOLXLoading(true);
+    try {
+      const result = await publishVehicleToOlx({
+        dealershipId: vehicle.dealershipId,
+        vehicleId:    vehicle.id,
+        make:         values.make,
+        model:        values.model,
+        year:         Number(values.year),
+        modelYear:    Number(values.modelYear),
+        price:        Number(values.price),
+        mileage:      Number(values.mileage),
+        fuel:         values.fuel,
+        transmission: values.transmission,
+        color:        values.color,
+        doors:        Number(values.doors),
+        plate:        values.plate,
+        plateEnding:  values.plateEnding,
+        description:  values.description,
+        images:       currentImages,
+      });
+      if (result.success) {
+        setOlxData({ adId: result.adId, publishedAt: new Date() });
+        toast({ title: "Publicado na OLX!", description: "Anúncio criado com sucesso." });
+      } else {
+        toast({ title: "Erro ao publicar na OLX", description: result.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao publicar na OLX", description: err.message, variant: "destructive" });
+    } finally {
+      setIsOLXLoading(false);
     }
   };
 
@@ -471,6 +509,53 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                 </Button>
                 <p className="text-xs" style={{ color: '#45464d' }}>
                   A conta do ML precisa estar conectada em Configurações.
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── OLX ── */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded font-bold text-white text-[10px]" style={{ backgroundColor: '#FF6B00' }}>OLX</div>
+              <CardTitle className="text-base">OLX</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {olxData?.adId ? (
+              <>
+                <div className="flex items-center gap-2 text-sm" style={{ color: '#065f46' }}>
+                  <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                  Anúncio publicado
+                </div>
+                <p className="text-xs font-mono" style={{ color: '#45464d' }}>ID: {olxData.adId}</p>
+                <a
+                  href="https://www.olx.com.br/minha-conta/meus-anuncios"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs underline"
+                  style={{ color: '#3980f4' }}
+                >
+                  Ver na OLX <ExternalLink className="h-3 w-3" />
+                </a>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full text-xs font-semibold"
+                  style={{ backgroundColor: '#FF6B00', color: '#fff' }}
+                  onClick={handlePublishOLX}
+                  disabled={isOLXLoading}
+                >
+                  {isOLXLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  Publicar na OLX
+                </Button>
+                <p className="text-xs" style={{ color: '#45464d' }}>
+                  A conta da OLX precisa estar conectada em Configurações.
                 </p>
               </>
             )}
