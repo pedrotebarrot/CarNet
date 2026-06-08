@@ -9,6 +9,7 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -18,10 +19,26 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 import { BrandColorsCard } from '@/components/dashboard/brand-colors-card';
 
+const BR_STATES = [
+  { id: 'BR-AC', name: 'Acre' }, { id: 'BR-AL', name: 'Alagoas' }, { id: 'BR-AP', name: 'Amapá' },
+  { id: 'BR-AM', name: 'Amazonas' }, { id: 'BR-BA', name: 'Bahia' }, { id: 'BR-CE', name: 'Ceará' },
+  { id: 'BR-DF', name: 'Distrito Federal' }, { id: 'BR-ES', name: 'Espírito Santo' },
+  { id: 'BR-GO', name: 'Goiás' }, { id: 'BR-MA', name: 'Maranhão' }, { id: 'BR-MT', name: 'Mato Grosso' },
+  { id: 'BR-MS', name: 'Mato Grosso do Sul' }, { id: 'BR-MG', name: 'Minas Gerais' },
+  { id: 'BR-PA', name: 'Pará' }, { id: 'BR-PB', name: 'Paraíba' }, { id: 'BR-PR', name: 'Paraná' },
+  { id: 'BR-PE', name: 'Pernambuco' }, { id: 'BR-PI', name: 'Piauí' },
+  { id: 'BR-RJ', name: 'Rio de Janeiro' }, { id: 'BR-RN', name: 'Rio Grande do Norte' },
+  { id: 'BR-RS', name: 'Rio Grande do Sul' }, { id: 'BR-RO', name: 'Rondônia' },
+  { id: 'BR-RR', name: 'Roraima' }, { id: 'BR-SC', name: 'Santa Catarina' },
+  { id: 'BR-SP', name: 'São Paulo' }, { id: 'BR-SE', name: 'Sergipe' }, { id: 'BR-TO', name: 'Tocantins' },
+];
+
 const dealershipSchema = z.object({
     name:    z.string().min(3,  { message: 'O nome deve ter pelo menos 3 caracteres.' }),
     phone:   z.string().min(10, { message: 'Informe um telefone válido com DDD.' }),
     address: z.string().min(5,  { message: 'Informe o endereço completo.' }),
+    city:    z.string().min(2,  { message: 'Informe a cidade.' }),
+    stateId: z.string().min(1,  { message: 'Selecione o estado.' }),
     logo:    z.any().optional(),
 });
 
@@ -49,7 +66,7 @@ export default function SettingsPage() {
 
     const form = useForm<DealershipFormValues>({
         resolver: zodResolver(dealershipSchema),
-        defaultValues: { name: '', phone: '', address: '' },
+        defaultValues: { name: '', phone: '', address: '', city: '', stateId: '' },
     });
 
     useEffect(() => {
@@ -58,6 +75,8 @@ export default function SettingsPage() {
                 name:    dealershipData.name    ?? '',
                 phone:   dealershipData.phone   ?? '',
                 address: dealershipData.address ?? '',
+                city:    dealershipData.city    ?? '',
+                stateId: dealershipData.stateId ?? '',
             });
             if (dealershipData.logoUrl) setLogoPreview(dealershipData.logoUrl);
         }
@@ -85,6 +104,7 @@ export default function SettingsPage() {
             }
             await updateDoc(dealershipDocRef, {
                 name: data.name, phone: data.phone, address: data.address,
+                city: data.city, stateId: data.stateId,
                 logoUrl, updatedAt: new Date(),
             });
             toast({ title: 'Sucesso!', description: 'Informações atualizadas com sucesso.' });
@@ -179,10 +199,32 @@ export default function SettingsPage() {
                             <FormField control={form.control} name="address" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Endereço Completo</FormLabel>
-                                    <FormControl><Input placeholder="Rua das Flores, 123 - Centro, São Paulo - SP" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="Rua das Flores, 123 - Centro" {...field} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <FormField control={form.control} name="city" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Cidade</FormLabel>
+                                        <FormControl><Input placeholder="São Paulo" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="stateId" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Estado</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                {BR_STATES.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
 
                             {dealershipData?.slug && (
                                 <div className="rounded border p-4 flex items-center justify-between gap-4" style={{ borderColor: '#e5eeff', backgroundColor: '#f8f9ff' }}>

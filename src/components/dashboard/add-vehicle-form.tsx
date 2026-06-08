@@ -17,6 +17,8 @@ import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-descript
 import { compressImage, MAX_IMAGE_SIZE_BYTES, IMAGE_ACCEPT } from '@/lib/utils/compress-image';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { SortablePhotoGrid, PhotoItem } from '@/components/dashboard/sortable-photo-grid';
 
 import { useUser, useFirestore, useStorage, useDoc } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
@@ -36,6 +38,7 @@ const vehicleSchema = z.object({
   transmission: z.string().min(1, { message: 'Selecione o câmbio.' }),
   mileage: z.coerce.number().min(0, { message: 'A quilometragem deve ser um número positivo.' }),
   price: z.coerce.number().min(1, { message: 'O preço deve ser maior que zero.' }),
+  version: z.string().optional(),
   description: z.string().optional(),
   status: z.enum(['available', 'sold', 'unavailable']),
   images: z.any().optional(),
@@ -47,6 +50,9 @@ export function AddVehicleForm() {
   const [isPlateLoading, setIsPlateLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [publishToML, setPublishToML] = useState(false);
+  const [previewItems, setPreviewItems] = useState<PhotoItem[]>([]);
+  const [fileMap] = useState<Map<string, File>>(new Map());
   const { toast } = useToast();
 
   const { user } = useUser();
@@ -59,6 +65,13 @@ export function AddVehicleForm() {
   );
 
   const { data: userData } = useDoc(userDocRef);
+
+  const dealershipDocRef = useMemo(() =>
+    userData?.dealershipId ? doc(firestore, 'dealerships', userData.dealershipId) : null,
+    [userData, firestore]
+  );
+  const { data: dealershipData } = useDoc(dealershipDocRef);
+  const mlConnected = dealershipData?.integrations?.mercadolivre?.connected === true;
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
@@ -76,6 +89,7 @@ export function AddVehicleForm() {
       doors: 4,
       fuel: '',
       transmission: '',
+      version: '',
       description: '',
     },
   });
@@ -100,6 +114,7 @@ export function AddVehicleForm() {
         form.setValue('doors', result.doors, { shouldValidate: true });
         form.setValue('transmission', result.transmission, { shouldValidate: true });
         form.setValue('plateEnding', result.plateEnding, { shouldValidate: true });
+        if (result.version) form.setValue('version', result.version, { shouldValidate: true });
         toast({ title: "Veículo encontrado!", description: "Dados técnicos preenchidos." });
       } else {
         toast({ title: "Placa não encontrada", description: "Preencha os dados manualmente.", variant: "destructive" });
@@ -134,11 +149,15 @@ export function AddVehicleForm() {
         price: values.price,
         existingNotes: values.description || '',
       });
-      form.setValue('description', aiResult.description, { shouldValidate: true });
+      if (aiResult.error) {
+        toast({ title: "Erro na IA", description: aiResult.error, variant: "destructive" });
+        return;
+      }
+      form.setValue('description', aiResult.description ?? '', { shouldValidate: true });
       toast({ title: "Descrição gerada!", description: "O texto foi criado com base nos dados do veículo." });
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI description generation failed:', error);
-      toast({ title: "Erro na IA", description: "Não foi possível gerar a descrição. Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro na IA", description: String(error?.message ?? error), variant: "destructive" });
     } finally {
       setIsGeneratingDescription(false);
     }
@@ -153,24 +172,15 @@ export function AddVehicleForm() {
 
     setIsSubmitting(true);
     try {
-      // Upload images — validate, compress then send
+      // Upload images in the order the user arranged them
       const imageUrls = [];
-      if (data.images && data.images.length > 0) {
-        const files = Array.from(data.images as FileList);
-        const validFiles = files.filter(f => {
-          if (f.size > MAX_IMAGE_SIZE_BYTES) {
-            toast({ title: `"${f.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
-            return false;
-          }
-          return true;
-        });
-        for (let i = 0; i < validFiles.length; i++) {
-          const compressed = await compressImage(validFiles[i]);
-          const storageRef = ref(storage, `vehicles/${userData.dealershipId}/${Date.now()}_${compressed.name}`);
-          await uploadBytes(storageRef, compressed);
-          const url = await getDownloadURL(storageRef);
-          imageUrls.push(url);
-        }
+      const orderedFiles = previewItems.map(item => fileMap.get(item.id)).filter(Boolean) as File[];
+      for (let i = 0; i < orderedFiles.length; i++) {
+        const compressed = await compressImage(orderedFiles[i]);
+        const storageRef = ref(storage, `vehicles/${userData.dealershipId}/${Date.now()}_${compressed.name}`);
+        await uploadBytes(storageRef, compressed);
+        const url = await getDownloadURL(storageRef);
+        imageUrls.push(url);
       }
 
       const vehicleDoc = await addDoc(collection(firestore, 'vehicles'), {
@@ -187,8 +197,8 @@ export function AddVehicleForm() {
 
       toast({ title: "Sucesso!", description: "Veículo cadastrado com sucesso." });
 
-      // Publicar no Mercado Livre se conectado (silencioso se não conectado)
-      if (data.status === 'available') {
+      // Publicar no Mercado Livre se o toggle estiver ativo
+      if (publishToML && mlConnected) {
         const mlResult = await publishVehicleToML({
           id:           vehicleDoc.id,
           make:         data.make,
@@ -201,21 +211,24 @@ export function AddVehicleForm() {
           transmission: data.transmission,
           color:        data.color,
           doors:        Number(data.doors),
+          plate:        data.plate,
           plateEnding:  data.plateEnding,
+          version:      data.version,
           description:  data.description,
           images:       imageUrls,
           dealershipId: userData.dealershipId,
         });
 
         if (mlResult.success && mlResult.mlId) {
-          toast({
-            title: "📢 Publicado no Mercado Livre!",
-            description: "O anúncio foi criado automaticamente na sua conta.",
-          });
+          toast({ title: "Publicado no Mercado Livre!", description: "Anúncio criado com sucesso na sua conta." });
+        } else {
+          toast({ title: "Veículo salvo, mas erro no ML", description: mlResult.error, variant: "destructive" });
         }
       }
 
       form.reset();
+      setPreviewItems([]);
+      fileMap.clear();
 
     } catch (error: any) {
       console.error("Error saving vehicle:", error);
@@ -314,15 +327,29 @@ export function AddVehicleForm() {
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Modelo Completo (FIPE)</FormLabel>
+                <FormLabel>Modelo</FormLabel>
                 <FormControl>
-                   <Input placeholder="Ex: ONIX HATCH LT 1.0 8V FlexPower 5p Mec." {...field} />
+                   <Input placeholder="Ex: Onix, HB20, Corolla" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="version"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Versão <span className="text-muted-foreground font-normal">(opcional, mas recomendado para o ML)</span></FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: LT 1.0 Turbo Flex, Sport 2.0 AT" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -573,34 +600,82 @@ export function AddVehicleForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="images"
-          render={({ field: { onChange, value, ...rest } }) => (
-            <FormItem>
-              <FormLabel>Fotos Principais</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  multiple
-                  accept={IMAGE_ACCEPT}
-                  onChange={(e) => onChange(e.target.files)}
-                  {...rest}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="space-y-2">
+          <Label>Fotos Principais</Label>
+          {previewItems.length === 0 ? (
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors">
+              <Sparkles className="h-5 w-5 text-muted-foreground mb-1" />
+              <span className="text-sm text-muted-foreground">Clique para selecionar fotos</span>
+              <span className="text-xs text-muted-foreground mt-1">JPEG, PNG, WebP, HEIC · Máx. 20 MB cada</span>
+              <input
+                type="file"
+                multiple
+                accept={IMAGE_ACCEPT}
+                className="hidden"
+                onChange={(e) => {
+                  if (!e.target.files?.length) return;
+                  const newItems: PhotoItem[] = [];
+                  Array.from(e.target.files).forEach(file => {
+                    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+                      toast({ title: `"${file.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
+                      return;
+                    }
+                    const id = `${Date.now()}-${Math.random()}`;
+                    fileMap.set(id, file);
+                    newItems.push({ id, src: URL.createObjectURL(file) });
+                  });
+                  setPreviewItems(prev => [...prev, ...newItems]);
+                }}
+              />
+            </label>
+          ) : (
+            <SortablePhotoGrid
+              items={previewItems}
+              onChange={setPreviewItems}
+              onAddMore={(files) => {
+                const newItems: PhotoItem[] = [];
+                Array.from(files).forEach(file => {
+                  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+                    toast({ title: `"${file.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
+                    return;
+                  }
+                  const id = `${Date.now()}-${Math.random()}`;
+                  fileMap.set(id, file);
+                  newItems.push({ id, src: URL.createObjectURL(file) });
+                });
+                setPreviewItems(prev => [...prev, ...newItems]);
+              }}
+              accept={IMAGE_ACCEPT}
+            />
           )}
-        />
+        </div>
+
+        {mlConnected && (
+          <div
+            className="flex items-center justify-between rounded-lg border p-4"
+            style={{ borderColor: publishToML ? '#ffd000' : '#e5eeff', backgroundColor: publishToML ? '#fffbe6' : '#f8f9ff' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md font-bold text-sm" style={{ backgroundColor: '#ffd000' }}>
+                ML
+              </div>
+              <div>
+                <p className="text-sm font-medium" style={{ color: '#0b1c30' }}>Publicar no Mercado Livre</p>
+                <p className="text-xs" style={{ color: '#45464d' }}>O anúncio será criado automaticamente ao salvar</p>
+              </div>
+            </div>
+            <Switch checked={publishToML} onCheckedChange={setPublishToML} />
+          </div>
+        )}
 
         <Button type="submit" disabled={isSubmitting || !userData}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {publishToML ? 'Salvando e publicando...' : 'Salvando...'}
             </>
           ) : (
-            'Salvar Veículo'
+            publishToML ? 'Salvar e Publicar no ML' : 'Salvar Veículo'
           )}
         </Button>
       </form>

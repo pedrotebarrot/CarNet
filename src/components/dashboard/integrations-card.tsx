@@ -44,9 +44,10 @@ export function IntegrationsCard({
         token_failed:   'Falha ao obter token. Verifique as credenciais.',
         oauth_failed:   'Erro no processo de autorização.',
       };
+      const detail = searchParams.get('ml_detail');
       toast({
         title: 'Erro ao conectar',
-        description: messages[mlError] ?? 'Ocorreu um erro. Tente novamente.',
+        description: (messages[mlError] ?? 'Ocorreu um erro. Tente novamente.') + (detail ? ` — ${decodeURIComponent(detail)}` : ''),
         variant: 'destructive',
       });
       window.history.replaceState({}, '', '/dashboard/settings');

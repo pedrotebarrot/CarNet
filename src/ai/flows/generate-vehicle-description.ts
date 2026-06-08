@@ -23,14 +23,16 @@ export interface GenerateVehicleDescriptionInput {
 }
 
 export interface GenerateVehicleDescriptionOutput {
-  description: string;
+  description?: string;
+  error?: string;
 }
 
 export async function generateVehicleDescription(
   input: GenerateVehicleDescriptionInput,
 ): Promise<GenerateVehicleDescriptionOutput> {
+  try {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_GENAI_API_KEY not configured');
+  if (!apiKey) return { error: 'GOOGLE_GENAI_API_KEY not configured' };
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
@@ -102,5 +104,8 @@ ${input.existingNotes ? `- Observações do vendedor: ${input.existingNotes}` : 
     return JSON.parse(text);
   } catch {
     return { description: text };
+  }
+  } catch (err: any) {
+    return { error: String(err?.message ?? err) };
   }
 }

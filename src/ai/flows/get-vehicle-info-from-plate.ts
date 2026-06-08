@@ -26,6 +26,7 @@ const GetVehicleInfoFromPlateOutputSchema = z.object({
   doors: z.number().describe('Number of doors.'),
   color: z.string().describe('Vehicle color.'),
   plateEnding: z.string().describe('Last digit of the license plate.'),
+  version: z.string().describe('Vehicle trim/version (e.g. LT 1.0 Turbo Flex).').optional(),
 });
 export type GetVehicleInfoFromPlateOutput = z.infer<typeof GetVehicleInfoFromPlateOutputSchema>;
 
@@ -115,6 +116,8 @@ export async function getVehicleInfoFromPlate(input: GetVehicleInfoFromPlateInpu
        fuel = data.extra.combustivel.charAt(0).toUpperCase() + data.extra.combustivel.slice(1).toLowerCase();
     }
 
+    const version = rawVersion || fipeDescriptions.split(' | ')[0] || '';
+
     return {
       make,
       model,
@@ -124,7 +127,8 @@ export async function getVehicleInfoFromPlate(input: GetVehicleInfoFromPlateInpu
       fuel,
       doors,
       color,
-      plateEnding
+      plateEnding,
+      version,
     };
 
   } catch (error) {

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Search, Sparkles, Upload, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Search, Sparkles, ExternalLink } from 'lucide-react';
+import { SortablePhotoGrid, PhotoItem } from '@/components/dashboard/sortable-photo-grid';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useStorage } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { publishVehicleToML, unpublishVehicleFromML } from '@/actions/mercadolivre';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7).max(7),
@@ -36,6 +38,7 @@ const vehicleSchema = z.object({
   transmission: z.string().min(1),
   mileage: z.coerce.number().min(0),
   price: z.coerce.number().min(1),
+  version: z.string().optional(),
   description: z.string().optional(),
   status: z.enum(['available', 'sold', 'unavailable']),
 });
@@ -49,6 +52,8 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadProgress,    setUploadProgress]    = useState('');
   const [currentImages, setCurrentImages] = useState<string[]>(vehicle.images || []);
+  const [mlData, setMlData] = useState<any>(vehicle.marketplace?.mercadolivre ?? null);
+  const [isMLLoading, setIsMLLoading] = useState(false);
   
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -69,6 +74,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
       transmission: vehicle.transmission || '',
       mileage: vehicle.mileage || 0,
       price: vehicle.price || 0,
+      version: vehicle.version || '',
       description: vehicle.description || '',
       status: vehicle.status || 'available',
     },
@@ -91,6 +97,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
         form.setValue('doors', result.doors, { shouldValidate: true });
         form.setValue('transmission', result.transmission, { shouldValidate: true });
         form.setValue('plateEnding', result.plateEnding, { shouldValidate: true });
+        if (result.version) form.setValue('version', result.version, { shouldValidate: true });
         toast({ title: "Dados atualizados!", description: "Informações técnicas recuperadas pela placa." });
       }
     } catch (error) {
@@ -126,10 +133,10 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
+  const handleImageUpload = async (fileList: FileList) => {
+    if (!fileList?.length) return;
 
-    const files = Array.from(e.target.files);
+    const files = Array.from(fileList);
 
     // Validate sizes first
     const oversized = files.filter(f => f.size > MAX_IMAGE_SIZE_BYTES);
@@ -177,13 +184,11 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     } finally {
       setIsUploadingImages(false);
       setUploadProgress('');
-      // Reset input so the same file can be re-selected
-      e.target.value = '';
     }
   };
 
-  const removeImage = async (index: number) => {
-    const newImages = currentImages.filter((_, i) => i !== index);
+  const handlePhotosChange = async (items: PhotoItem[]) => {
+    const newImages = items.map(i => i.src);
     setCurrentImages(newImages);
     try {
       const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
@@ -192,48 +197,57 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
         featuredImage: newImages[0] ?? null,
         updatedAt: new Date(),
       });
-      toast({ title: "Foto removida" });
-    } catch (error) {
-      toast({ title: "Erro ao atualizar", variant: "destructive" });
+    } catch {
+      toast({ title: "Erro ao atualizar fotos", variant: "destructive" });
     }
   };
 
-  const setAsCover = async (index: number) => {
-    if (index === 0) return;
-    const newImages = [...currentImages];
-    const [coverImage] = newImages.splice(index, 1);
-    newImages.unshift(coverImage);
-    setCurrentImages(newImages);
+  const handlePublishML = async () => {
+    const values = form.getValues();
+    setIsMLLoading(true);
     try {
-      const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
-      await updateDoc(vehicleRef, {
-        images: newImages,
-        featuredImage: newImages[0],
-        updatedAt: new Date(),
+      const result = await publishVehicleToML({
+        id:           vehicle.id,
+        make:         values.make,
+        model:        values.model,
+        version:      values.version,
+        year:         Number(values.year),
+        modelYear:    Number(values.modelYear),
+        price:        Number(values.price),
+        mileage:      Number(values.mileage),
+        fuel:         values.fuel,
+        transmission: values.transmission,
+        color:        values.color,
+        doors:        Number(values.doors),
+        plate:        values.plate,
+        plateEnding:  values.plateEnding,
+        description:  values.description,
+        images:       currentImages,
+        dealershipId: vehicle.dealershipId,
       });
-      toast({ title: "✅ Capa definida!", description: "Essa foto será usada no site e no template do Instagram." });
-    } catch (error) {
-      toast({ title: "Erro ao atualizar capa", variant: "destructive" });
+      if (result.success) {
+        setMlData({ id: result.mlId, permalink: result.permalink, status: 'active' });
+        toast({ title: "Publicado no Mercado Livre!", description: "Anúncio criado com sucesso." });
+      } else {
+        toast({ title: "Erro ao publicar", description: result.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao publicar", description: err.message, variant: "destructive" });
+    } finally {
+      setIsMLLoading(false);
     }
   };
 
-  const moveImage = async (index: number, direction: 'left' | 'right') => {
-    if (direction === 'left' && index === 0) return;
-    if (direction === 'right' && index === currentImages.length - 1) return;
-
-    const newIndex = direction === 'left' ? index - 1 : index + 1;
-    const newImages = [...currentImages];
-    const temp = newImages[index];
-    newImages[index] = newImages[newIndex];
-    newImages[newIndex] = temp;
-    
-    setCurrentImages(newImages);
-    
+  const handleUnpublishML = async () => {
+    setIsMLLoading(true);
     try {
-      const vehicleRef = doc(firestore, 'vehicles', vehicle.id);
-      await updateDoc(vehicleRef, { images: newImages, updatedAt: new Date() });
-    } catch (error) {
-      toast({ title: "Erro ao reordenar", variant: "destructive" });
+      await unpublishVehicleFromML(vehicle.id, vehicle.dealershipId);
+      setMlData((prev: any) => ({ ...prev, status: 'closed' }));
+      toast({ title: "Anúncio encerrado no Mercado Livre." });
+    } catch (err: any) {
+      toast({ title: "Erro ao encerrar", description: err.message, variant: "destructive" });
+    } finally {
+      setIsMLLoading(false);
     }
   };
 
@@ -267,99 +281,15 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
             <CardDescription>Gerencie as imagens do veículo.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-xs mb-4" style={{ color: '#45464d' }}>
-              A <strong style={{ color: '#0b1c30' }}>1ª foto</strong> é a capa — aparece no site, no carrossel e no template do Instagram.
-              Passe o mouse em qualquer foto e clique em <strong style={{ color: '#0b1c30' }}>Tornar Capa</strong> para alterar.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {currentImages.map((url, index) => (
-                <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border bg-muted">
-                  <img src={url} alt="Veículo" className="object-cover w-full h-full" />
-                  
-                  {/* Image Actions Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                    
-                    {/* Top actions */}
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
-                        title="Remover foto"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    {/* Bottom actions */}
-                    <div className="flex items-center justify-between mt-auto">
-                      <div className="flex gap-1">
-                        {index > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => moveImage(index, 'left')}
-                            className="p-1 bg-black/60 hover:bg-black/80 text-white rounded transition-colors"
-                            title="Mover para esquerda"
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </button>
-                        )}
-                        {index < currentImages.length - 1 && (
-                          <button
-                            type="button"
-                            onClick={() => moveImage(index, 'right')}
-                            className="p-1 bg-black/60 hover:bg-black/80 text-white rounded transition-colors"
-                            title="Mover para direita"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                      
-                      {index !== 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setAsCover(index)}
-                          className="px-2 py-1 bg-black/60 hover:bg-black/80 text-white rounded text-[10px] font-medium transition-colors"
-                        >
-                          Tornar Capa
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {index === 0 && (
-                    <div
-                      className="absolute top-2 left-2 font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded pointer-events-none z-10"
-                      style={{ backgroundColor: '#3980f4', color: '#fff' }}
-                    >
-                      ★ Capa
-                    </div>
-                  )}
-                </div>
-              ))}
-              <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors">
-                {isUploadingImages ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                ) : (
-                  <>
-                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold">Adicionar</span>
-                  </>
-                )}
-                <input type="file" multiple accept={IMAGE_ACCEPT} className="hidden" onChange={handleImageUpload} disabled={isUploadingImages} />
-              </label>
-            </div>
-
-            {/* Upload progress */}
-            {uploadProgress && (
-              <div className="flex items-center gap-2 text-sm" style={{ color: '#45464d' }}>
-                <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" style={{ color: '#3980f4' }} />
-                {uploadProgress}
-              </div>
-            )}
-
-            <p className="text-xs" style={{ color: '#45464d' }}>
+            <SortablePhotoGrid
+              items={currentImages.map((url, i) => ({ id: `${url}-${i}`, src: url }))}
+              onChange={handlePhotosChange}
+              onAddMore={handleImageUpload}
+              isUploading={isUploadingImages}
+              uploadProgress={uploadProgress}
+              accept={IMAGE_ACCEPT}
+            />
+            <p className="text-xs mt-3" style={{ color: '#45464d' }}>
               Formatos aceitos: JPEG, PNG, WebP e HEIC (fotos de iPhone) · Máx. 20 MB por foto · Compressão automática aplicada antes do envio
             </p>
           </CardContent>
@@ -420,6 +350,13 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   )} />
                 </div>
 
+                <FormField control={form.control} name="version" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Versão <span className="text-muted-foreground font-normal text-xs">(recomendado para ML)</span></FormLabel>
+                    <FormControl><Input placeholder="Ex: LT 1.0 Turbo Flex, Sport 2.0 AT" {...field} /></FormControl>
+                  </FormItem>
+                )} />
+
                 <div className="grid grid-cols-2 gap-4">
                    <FormField control={form.control} name="year" render={({ field }) => (
                     <FormItem><FormLabel>Ano Fab.</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent></Select></FormItem>
@@ -476,6 +413,70 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
       </div>
 
       <div className="space-y-6">
+
+        {/* ── Mercado Livre ── */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded font-bold text-[10px]" style={{ backgroundColor: '#FFE600', color: '#333' }}>ML</div>
+              <CardTitle className="text-base">Mercado Livre</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {mlData?.id && mlData?.status !== 'closed' ? (
+              <>
+                <div className="flex items-center gap-2 text-sm" style={{ color: '#065f46' }}>
+                  <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                  Anúncio ativo
+                </div>
+                {mlData.permalink && (
+                  <a
+                    href={mlData.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs underline"
+                    style={{ color: '#3980f4' }}
+                  >
+                    Ver anúncio <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                  onClick={handleUnpublishML}
+                  disabled={isMLLoading}
+                >
+                  {isMLLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  Encerrar anúncio
+                </Button>
+              </>
+            ) : (
+              <>
+                {mlData?.status === 'closed' && (
+                  <p className="text-xs" style={{ color: '#92400e' }}>Anúncio encerrado.</p>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full text-xs font-semibold"
+                  style={{ backgroundColor: '#FFE600', color: '#333' }}
+                  onClick={handlePublishML}
+                  disabled={isMLLoading}
+                >
+                  {isMLLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  Publicar no Mercado Livre
+                </Button>
+                <p className="text-xs" style={{ color: '#45464d' }}>
+                  A conta do ML precisa estar conectada em Configurações.
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle>Prévia do Site</CardTitle></CardHeader>
           <CardContent className="space-y-4">

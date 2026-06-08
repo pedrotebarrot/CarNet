@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import { firebaseConfig } from '@/firebase/config';
+import { getAdminDb } from '@/firebase/admin';
 
 export async function GET(request: NextRequest) {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://autosdigital.vercel.app';
+  const base = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://autosdigital.vercel.app').replace(/\/$/, '');
   const { searchParams } = new URL(request.url);
 
   const code        = searchParams.get('code');
@@ -23,6 +21,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${base}/dashboard/settings?ml_error=not_configured`);
   }
 
+  const codeVerifier = request.cookies.get('ml_code_verifier')?.value;
+
   try {
     const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
       method: 'POST',
@@ -33,35 +33,39 @@ export async function GET(request: NextRequest) {
         client_secret: secret,
         code,
         redirect_uri:  redirectUri,
+        ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
       }),
     });
 
     if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      console.error('ML token exchange failed:', err);
-      return NextResponse.redirect(`${base}/dashboard/settings?ml_error=token_failed`);
+      const errText = await tokenRes.text();
+      console.error('ML token exchange failed:', errText);
+      const detail = encodeURIComponent(errText.slice(0, 200));
+      return NextResponse.redirect(`${base}/dashboard/settings?ml_error=token_failed&ml_detail=${detail}`);
     }
 
     const tokens = await tokenRes.json();
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const db = getAdminDb();
 
-    await updateDoc(doc(db, 'dealerships', dealershipId), {
+    await db.doc(`dealerships/${dealershipId}`).update({
       'integrations.mercadolivre': {
-        connected:    true,
-        accessToken:  tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        userId:       tokens.user_id,
+        connected:   true,
+        accessToken: tokens.access_token,
+        userId:      tokens.user_id,
         expiresAt,
-        connectedAt:  new Date(),
+        connectedAt: new Date(),
+        ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
       },
     });
 
-    return NextResponse.redirect(`${base}/dashboard/settings?ml_connected=1`);
-  } catch (err) {
+    const successRes = NextResponse.redirect(`${base}/dashboard/settings?ml_connected=1`);
+    successRes.cookies.delete('ml_code_verifier');
+    return successRes;
+  } catch (err: any) {
     console.error('ML OAuth error:', err);
-    return NextResponse.redirect(`${base}/dashboard/settings?ml_error=oauth_failed`);
+    const detail = encodeURIComponent(String(err?.message ?? err).slice(0, 200));
+    return NextResponse.redirect(`${base}/dashboard/settings?ml_error=oauth_failed&ml_detail=${detail}`);
   }
 }
