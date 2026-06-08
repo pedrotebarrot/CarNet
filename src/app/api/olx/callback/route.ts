@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/firebase/admin';
+import { registerOlxWebhooks } from '@/lib/olx/register-webhooks';
 
 export async function GET(request: NextRequest) {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://autosdigital.vercel.app').replace(/\/$/, '');
@@ -56,6 +57,12 @@ export async function GET(request: NextRequest) {
         ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
         ...(tokens.user_id       ? { userId: tokens.user_id }             : {}),
       },
+    });
+
+    // Auto-register AD_STATUS and LEAD webhooks (fire-and-forget; errors are
+    // stored on the doc so the dealer can retry from Settings if needed).
+    registerOlxWebhooks(dealershipId, tokens.access_token).catch(err => {
+      console.error('[OLX callback] webhook auto-registration failed:', err);
     });
 
     const successRes = NextResponse.redirect(`${base}/dashboard/settings?olx_connected=1`);

@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Car, Menu, Settings, ExternalLink, Loader2 } from "lucide-react";
+import { Car, Menu, Settings, ExternalLink, Loader2, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -65,6 +65,16 @@ export default function DashboardLayout({
       >
         <Car className="h-4 w-4 shrink-0" />
         Estoque de Veículos
+      </Link>
+      <Link
+        href="/dashboard/leads"
+        className="flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-colors"
+        style={{ color: 'rgba(255,255,255,0.7)' }}
+        onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+      >
+        <MessageSquare className="h-4 w-4 shrink-0" />
+        Leads
       </Link>
       <Link
         href="/dashboard/settings"
