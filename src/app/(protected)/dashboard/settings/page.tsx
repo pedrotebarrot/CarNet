@@ -39,6 +39,7 @@ const dealershipSchema = z.object({
     address: z.string().min(5,  { message: 'Informe o endereço completo.' }),
     city:    z.string().min(2,  { message: 'Informe a cidade.' }),
     stateId: z.string().min(1,  { message: 'Selecione o estado.' }),
+    zipcode: z.string().optional(),
     logo:    z.any().optional(),
 });
 
@@ -66,7 +67,7 @@ export default function SettingsPage() {
 
     const form = useForm<DealershipFormValues>({
         resolver: zodResolver(dealershipSchema),
-        defaultValues: { name: '', phone: '', address: '', city: '', stateId: '' },
+        defaultValues: { name: '', phone: '', address: '', city: '', stateId: '', zipcode: '' },
     });
 
     useEffect(() => {
@@ -77,6 +78,7 @@ export default function SettingsPage() {
                 address: dealershipData.address ?? '',
                 city:    dealershipData.city    ?? '',
                 stateId: dealershipData.stateId ?? '',
+                zipcode: dealershipData.zipcode ?? '',
             });
             if (dealershipData.logoUrl) setLogoPreview(dealershipData.logoUrl);
         }
@@ -105,6 +107,7 @@ export default function SettingsPage() {
             await updateDoc(dealershipDocRef, {
                 name: data.name, phone: data.phone, address: data.address,
                 city: data.city, stateId: data.stateId,
+                ...(data.zipcode ? { zipcode: data.zipcode.replace(/\D/g, '') } : {}),
                 logoUrl, updatedAt: new Date(),
             });
             toast({ title: 'Sucesso!', description: 'Informações atualizadas com sucesso.' });
@@ -204,7 +207,7 @@ export default function SettingsPage() {
                                 </FormItem>
                             )} />
 
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-4 md:grid-cols-3">
                                 <FormField control={form.control} name="city" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Cidade</FormLabel>
@@ -221,6 +224,22 @@ export default function SettingsPage() {
                                                 {BR_STATES.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="zipcode" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>CEP <span className="text-muted-foreground font-normal text-xs">(OLX)</span></FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="00000-000"
+                                                {...field}
+                                                onChange={e => {
+                                                    const v = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                                    field.onChange(v.length > 5 ? `${v.slice(0,5)}-${v.slice(5)}` : v);
+                                                }}
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />

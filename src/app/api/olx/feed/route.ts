@@ -2,7 +2,10 @@
  * OLX JSON feed — formato autoupload para veículos
  * URL: /api/olx/feed?slug=<dealership-slug>
  *
- * OLX puxa este endpoint periodicamente para sincronizar o estoque.
+ * OLX puxa este endpoint periodicamente (mínimo diário) para sincronizar.
+ * Retorna array JSON raiz conforme documentação:
+ * https://developers.olx.com.br/anuncio/json/autos/home.html
+ *
  * Categoria 2020 = Carros, Vans e Utilitários
  */
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,21 +15,29 @@ import { firebaseConfig } from '@/firebase/config';
 
 export const revalidate = 0;
 
-function mapOlxFuel(fuel: string): string {
+// Fuel: "1"=Gasolina "2"=Etanol "3"=Flex "4"=GNV "5"=Diesel "6"=Híbrido "7"=Elétrico
+function mapFuel(fuel: string): string {
   const f = fuel.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  if (f.includes('flex'))                              return 'flex';
-  if (f.includes('eletric') || f.includes('eletro'))  return 'eletrico';
-  if (f.includes('hibrido') || f.includes('hybrid'))  return 'hibrido';
-  if (f.includes('diesel'))                            return 'diesel';
-  if (f.includes('gas natural') || f.includes('gnv')) return 'gnv';
-  if (f.includes('etanol') || f.includes('alcool'))   return 'alcool';
-  return 'gasolina';
+  if (f.includes('flex'))                              return '3';
+  if (f.includes('eletric') || f.includes('eletro'))  return '7';
+  if (f.includes('hibrido') || f.includes('hybrid'))  return '6';
+  if (f.includes('diesel'))                            return '5';
+  if (f.includes('gas natural') || f.includes('gnv')) return '4';
+  if (f.includes('etanol') || f.includes('alcool'))   return '2';
+  return '1'; // Gasolina
 }
 
-function mapOlxTransmission(t: string): string {
+// Gearbox: "1"=Manual "2"=Automático "3"=Semiautomático
+function mapGearbox(t: string): string {
   const s = t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  if (s.includes('auto') || s.includes('cvt')) return 'automatico';
-  return 'manual';
+  if (s.includes('cvt') || s.includes('auto')) return '2';
+  if (s.includes('semi') || s.includes('automatizado')) return '3';
+  return '1'; // Manual
+}
+
+// OLX id: max 19 chars, only [A-Za-z0-9_{}-]
+function olxId(firestoreId: string): string {
+  return firestoreId.replace(/[^A-Za-z0-9_{}\\-]/g, '').slice(0, 19);
 }
 
 export async function GET(request: NextRequest) {
@@ -45,6 +56,9 @@ export async function GET(request: NextRequest) {
   if (dSnap.empty) return new NextResponse('Not found', { status: 404 });
   const dealership = { id: dSnap.docs[0].id, ...dSnap.docs[0].data() } as any;
 
+  // zipcode é obrigatório — usar o CEP cadastrado na revenda
+  const zipcode = (dealership.zipcode ?? '').replace(/\D/g, '');
+
   // Fetch vehicles enabled for OLX (available + olxEnabled)
   const vSnap = await getDocs(
     query(
@@ -56,53 +70,56 @@ export async function GET(request: NextRequest) {
   );
   const vehicles = vSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-  const ads = vehicles.map(v => {
-    const priceReais = Math.round((v.price ?? 0) / 100);
-    const mileage    = Math.max(0, v.mileage ?? 0);
-    const images     = (v.images ?? []).slice(0, 20);
-    const subject    = `${v.make} ${v.model} ${v.year}/${v.modelYear ?? v.year}`;
-    const body       =
-      v.description ||
-      `${subject} — ${mileage.toLocaleString('pt-BR')} km, ${v.fuel}, ${v.transmission}, ${v.color}` +
-      (v.doors ? `, ${v.doors} portas` : '') +
-      (v.plateEnding ? `. Final de placa: ${v.plateEnding}` : '') +
-      '.';
+  // Formato correto conforme docs OLX JSON:
+  // - raiz é array []
+  // - images é array de strings
+  // - category é integer
+  // - price é integer
+  // - mileage é integer dentro de params
+  // - type: "s" obrigatório
+  // - zipcode obrigatório
+  const ads = vehicles
+    .filter(v => zipcode || true) // zipcode validated below
+    .map(v => {
+      const priceReais = Math.round((v.price ?? 0) / 100);
+      const mileage    = Math.max(0, v.mileage ?? 0);
+      const images     = (v.images ?? []) as string[];
+      const subject    = `${v.make} ${v.model} ${v.year}/${v.modelYear ?? v.year}`;
+      const body       = (
+        v.description ||
+        `${subject} — ${mileage.toLocaleString('pt-BR')} km, ${v.fuel}, ` +
+        `${v.transmission}, ${v.color}` +
+        (v.doors ? `, ${v.doors} portas` : '') +
+        (v.plateEnding ? `. Final de placa: ${v.plateEnding}` : '') +
+        '.'
+      ).slice(0, 6000);
 
-    return {
-      id:       v.id,
-      subject,
-      body,
-      category: { id: '2020' },
-      price:    priceReais > 0
-        ? { price: priceReais, negotiable: '1' }
-        : { negotiable: '1' },
-      phone: {
-        phone:        (dealership.phone ?? '').replace(/\D/g, ''),
-        phone_hidden: '0',
-      },
-      params: {
-        cartype:   [{ key: 'carros_e_caminhonetes' }],
-        marca:     v.make,
-        modelo:    v.model,
-        fuel:      [{ key: mapOlxFuel(v.fuel) }],
-        car_color: [{ key: v.color.toLowerCase() }],
-        gearbox:   [{ key: mapOlxTransmission(v.transmission) }],
-        ...(v.doors     ? { doors:    [{ key: String(v.doors) }] }    : {}),
-        ...(mileage > 0 ? { mileage:  [{ key: String(Math.round(mileage / 1000) * 1000) }] } : {}),
-        ...(v.year      ? { car_year: [{ key: String(v.year) }] }     : {}),
-      },
-      images: images.map((url: string, i: number) => ({
-        url,
-        label: i === 0 ? 'capa' : String(i),
-      })),
-    };
-  });
+      const ad: Record<string, any> = {
+        id:       olxId(v.id),
+        subject:  subject.slice(0, 90),
+        body,
+        category: 2020,
+        type:     's',
+        // zipcode: use dealership CEP (required by OLX)
+        ...(zipcode ? { zipcode } : {}),
+        ...(priceReais > 0 ? { price: priceReais } : {}),
+        ...(images.length  ? { images: images.slice(0, 20) } : {}),
+        params: {
+          regdate: String(v.year ?? new Date().getFullYear()),
+          fuel:    mapFuel(v.fuel ?? ''),
+          gearbox: mapGearbox(v.transmission ?? ''),
+          ...(mileage > 0 ? { mileage } : {}),
+        },
+      };
 
-  const feed = { ads };
+      return ad;
+    });
 
-  return NextResponse.json(feed, {
+  // OLX espera array raiz — NÃO um objeto wrapper
+  return NextResponse.json(ads, {
     headers: {
-      'Cache-Control': 'public, max-age=3600',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store', // feed sempre fresco
     },
   });
 }
