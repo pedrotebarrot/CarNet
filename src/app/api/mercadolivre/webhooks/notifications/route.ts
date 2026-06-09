@@ -72,14 +72,19 @@ async function findVehicleByMlItemId(dealershipId: string, itemId: string) {
 async function handleQuestion(notif: MLNotification, dealership: any, dealershipId: string) {
   const db   = getAdminDb();
   const token = await getValidToken(dealershipId);
-  if (!token) return { skipped: 'no token' };
+  if (!token) { console.error('[ML question] no token for dealership', dealershipId); return { skipped: 'no token' }; }
 
-  // Fetch question detail
+  console.log(`[ML question] fetching ${ML_API}${notif.resource}`);
   const res = await fetch(`${ML_API}${notif.resource}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) return { error: `fetch question ${res.status}` };
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error(`[ML question] fetch failed ${res.status}: ${errBody}`);
+    return { error: `fetch question ${res.status}: ${errBody.slice(0, 200)}` };
+  }
   const q: any = await res.json();
+  console.log('[ML question] payload:', JSON.stringify(q).slice(0, 500));
 
   // Reverse-lookup vehicle by item_id
   const itemId   = String(q.item_id ?? '');
@@ -168,13 +173,19 @@ async function handleMessage(notif: MLNotification, dealership: any, dealershipI
 async function handleVisLead(notif: MLNotification, dealershipId: string) {
   const db    = getAdminDb();
   const token = await getValidToken(dealershipId);
-  if (!token) return { skipped: 'no token' };
+  if (!token) { console.error('[ML vis_lead] no token for dealership', dealershipId); return { skipped: 'no token' }; }
 
+  console.log(`[ML vis_lead] fetching ${ML_API}${notif.resource}`);
   const res = await fetch(`${ML_API}${notif.resource}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) return { error: `fetch vis lead ${res.status}` };
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error(`[ML vis_lead] fetch failed ${res.status}: ${errBody}`);
+    return { error: `fetch vis lead ${res.status}: ${errBody.slice(0, 200)}` };
+  }
   const lead: any = await res.json();
+  console.log('[ML vis_lead] payload:', JSON.stringify(lead).slice(0, 500));
 
   // VIS leads usually contain item_id, contact info, buyer message
   const itemId   = String(lead.item_id ?? lead.itemId ?? '');
@@ -242,6 +253,7 @@ export async function POST(request: NextRequest) {
     console.warn(`[ML notification] dealer not found for user_id=${notif.user_id}`);
     return NextResponse.json({ ok: true, skipped: 'dealer not found' }, { status: 200 });
   }
+  console.log(`[ML notification] matched dealer ${dDoc.id} for user_id=${notif.user_id}, topic=${notif.topic}`);
 
   const dealership   = dDoc.data();
   const dealershipId = dDoc.id;
