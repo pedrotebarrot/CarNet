@@ -48,7 +48,7 @@ function normalizeColor(color: string): string {
 
 // ── Token management ────────────────────────────────────────────────────────
 
-async function getValidToken(dealershipId: string): Promise<string | null> {
+export async function getValidToken(dealershipId: string): Promise<string | null> {
   const db = getAdminDb();
   const snap = await db.doc(`dealerships/${dealershipId}`).get();
   if (!snap.exists) return null;

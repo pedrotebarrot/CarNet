@@ -3,8 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
 import { collection, doc, query, where, orderBy, limit, updateDoc } from 'firebase/firestore';
-import { Loader2, Mail, Phone, ExternalLink, MessageSquare, Car } from 'lucide-react';
+import { Loader2, Mail, Phone, MessageSquare, Car, Send, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { answerMLQuestion } from '@/actions/mercadolivre-answer';
+import { useToast } from '@/hooks/use-toast';
 
 function fmtDate(d: any): string {
   if (!d) return '';
@@ -21,7 +23,10 @@ function sourceLabel(s: string): { label: string; bg: string; color: string } {
 export default function LeadsPage() {
   const { user }  = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted'>('all');
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyingId,  setReplyingId]  = useState<string | null>(null);
 
   const userDocRef = useMemo(() =>
     user ? doc(firestore, 'users', user.uid) : null,
@@ -54,6 +59,25 @@ export default function LeadsPage() {
       status:       'contacted',
       contactedAt:  new Date(),
     });
+  };
+
+  const submitReply = async (lead: any) => {
+    const text = replyDrafts[lead.id]?.trim();
+    if (!text) { toast({ title: 'Escreva uma resposta', variant: 'destructive' }); return; }
+    setReplyingId(lead.id);
+    try {
+      const r = await answerMLQuestion(lead.id, lead.dealershipId, lead.mlQuestionId, text);
+      if (r.success) {
+        toast({ title: '✅ Resposta enviada!', description: 'A resposta foi publicada no Mercado Livre.' });
+        setReplyDrafts(d => ({ ...d, [lead.id]: '' }));
+      } else {
+        toast({ title: 'Erro ao responder', description: r.error, variant: 'destructive' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Erro ao responder', description: err.message, variant: 'destructive' });
+    } finally {
+      setReplyingId(null);
+    }
   };
 
   if (isLoading) {
@@ -164,8 +188,47 @@ export default function LeadsPage() {
                       "{lead.message}"
                     </p>
                   )}
+
+                  {/* Mostrar resposta já enviada */}
+                  {lead.answer && (
+                    <div className="mt-2 flex items-start gap-2 text-xs rounded p-2 border" style={{ borderColor: '#d1fae5', backgroundColor: '#f0fdf4', color: '#065f46' }}>
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold">Sua resposta:</span> {lead.answer}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reply UI inline para perguntas ML não respondidas */}
+                  {lead.source === 'mercadolivre' && lead.sourceKind === 'question' && lead.status === 'new' && (
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Responder no Mercado Livre..."
+                        value={replyDrafts[lead.id] ?? ''}
+                        onChange={e => setReplyDrafts(d => ({ ...d, [lead.id]: e.target.value }))}
+                        disabled={replyingId === lead.id}
+                        className="flex-1 rounded border px-3 py-1.5 text-xs"
+                        style={{ borderColor: '#e5eeff', color: '#0b1c30' }}
+                        onKeyDown={e => { if (e.key === 'Enter') submitReply(lead); }}
+                      />
+                      <button
+                        onClick={() => submitReply(lead)}
+                        disabled={replyingId === lead.id || !replyDrafts[lead.id]?.trim()}
+                        className="shrink-0 rounded px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50"
+                        style={{ backgroundColor: '#FFE600', color: '#333' }}
+                      >
+                        {replyingId === lead.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <span className="inline-flex items-center gap-1"><Send className="h-3 w-3" /> Enviar</span>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {lead.status === 'new' && (
+
+                {lead.status === 'new' && lead.source !== 'mercadolivre' && (
                   <button
                     onClick={() => markContacted(lead.id)}
                     className="shrink-0 rounded px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80"
