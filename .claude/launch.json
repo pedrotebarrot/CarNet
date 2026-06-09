@@ -5,7 +5,13 @@
       "name": "autosdigital-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 9000
+    },
+    {
+      "name": "autosdigital",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 9000
     }
   ]
 }

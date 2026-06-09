@@ -2,115 +2,150 @@ import Link from 'next/link';
 import {
   ArrowRight, CheckCircle2, Zap, Globe, Instagram,
   LayoutGrid, RefreshCw, Share2, TrendingUp, ShieldCheck, Sparkles,
-  Clock, AlertTriangle, XCircle,
+  Clock, AlertTriangle, XCircle, MessageSquare, Smartphone, HeadphonesIcon,
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const stats = [
-  { value: '+500',  label: 'Revendas ativas' },
-  { value: '+12k',  label: 'Veículos cadastrados' },
-  { value: '98%',   label: 'Satisfação dos clientes' },
-  { value: '3 min', label: 'Para publicar em tudo' },
+  { value: '1 clique',     label: 'Publica em todo lugar' },
+  { value: '0 código',     label: 'Não precisa saber mexer' },
+  { value: 'Sem fidelidade', label: 'Cancela quando quiser' },
+  { value: 'Humano',       label: 'Suporte por WhatsApp' },
 ];
 
 const pains = [
   {
     icon: <Clock className="h-6 w-6" />,
-    title: 'Horas perdidas em cada venda',
+    title: 'Você ainda cadastra o mesmo carro 4 vezes?',
     description:
-      'Cadastrar o mesmo carro no OLX, Mercado Livre e no WhatsApp manualmente consome tempo que poderia ser gasto vendendo.',
+      'Cadastra no OLX. Depois no Mercado Livre. Depois manda foto pelo WhatsApp. Depois posta no Instagram. Cada carro = 1 hora jogada fora. E você ainda tem que vender ele.',
   },
   {
     icon: <AlertTriangle className="h-6 w-6" />,
-    title: 'Carro vendido ainda sendo anunciado',
+    title: 'Vendeu sábado. Domingo às 9h alguém liga querendo aquele carro.',
     description:
-      'Quando o carro sai do pátio, você ainda precisa lembrar de tirar de cada plataforma uma por uma — e enquanto isso, continua recebendo contatos de graça.',
+      'Você esqueceu de tirar do OLX. Mancha sua nota na plataforma, irrita o cliente, e ainda te faz parecer desorganizado. A cada carro vendido, isso acontece — toda semana.',
   },
   {
     icon: <XCircle className="h-6 w-6" />,
-    title: 'Sem presença digital de verdade',
+    title: 'Seus concorrentes têm site. Você não.',
     description:
-      'Seu estoque vive em grupos de WhatsApp e planilhas. Clientes que pesquisam na internet simplesmente não te encontram.',
+      'Quando alguém pesquisa "carros usados em [sua cidade]", a loja do vizinho aparece e a sua não. Você perde clientes que nem sabem que sua loja existe. Todo dia.',
   },
 ];
 
 const features = [
   {
     icon: <Globe className="h-6 w-6" />,
-    title: 'Publique em todos os marketplaces de uma vez',
+    title: 'Cadastrou 1 vez? Já está em todo lugar.',
     description:
-      'Cadastrou o carro uma vez? Ele vai automaticamente para OLX, Mercado Livre e para o seu site. Em minutos, não em horas.',
+      'OLX, Mercado Livre e seu site recebem o carro automaticamente. Cada cadastro economiza 1 hora — que você passa vendendo, não digitando.',
     tag: 'Marketplaces',
   },
   {
     icon: <Zap className="h-6 w-6" />,
-    title: 'Vendeu? Some de tudo em 1 clique',
+    title: 'Marcou como vendido? Sai do ar na hora.',
     description:
-      'Marque o carro como "Vendido" e em segundos ele sai de todos os canais. Sem anúncios fantasmas, sem contatos frustrados.',
+      'Sem aquela situação chata do cliente ligando atrás de carro que já foi. Em segundos some de tudo. Sua reputação fica intacta nas plataformas.',
     tag: 'Controle',
   },
   {
     icon: <LayoutGrid className="h-6 w-6" />,
-    title: 'Site profissional com seu estoque ao vivo',
+    title: 'Sua loja na internet, do jeito que merece.',
     description:
-      'Cada revenda ganha uma página pública com identidade visual própria. Seu catálogo, na internet, atualizado em tempo real.',
-    tag: 'Presença Digital',
+      'Site próprio com sua marca, logo e cores. Quando alguém pesquisa carros na sua cidade, ele te encontra. Sem programador, sem agência, sem dor.',
+    tag: 'Site Próprio',
   },
   {
     icon: <Instagram className="h-6 w-6" />,
-    title: 'Posts para o Instagram gerados por IA',
+    title: 'Instagram profissional sem pagar agência.',
     description:
-      'Sem agência, sem copywriter. A IA cria a legenda e o post completo do veículo para você publicar no Instagram com um toque.',
+      'A IA escreve a legenda do carro completinha, com hashtags da sua cidade. Sua loja parece grande mesmo sendo pequena. R$ 0 de marketing.',
     tag: 'IA',
   },
   {
     icon: <Share2 className="h-6 w-6" />,
-    title: 'Catálogo sempre atualizado para compartilhar',
+    title: '1 link manda seu estoque inteiro pro WhatsApp.',
     description:
-      'Mande o link do seu catálogo no WhatsApp. O cliente vê todos os carros disponíveis em tempo real, sem precisar de PDF ou planilha.',
+      'Sem ficar enviando 30 fotos uma por uma. Manda um link só e o cliente vê tudo: fotos, preço, especificações, status. Atualizado ao vivo.',
     tag: 'Catálogo',
   },
   {
-    icon: <TrendingUp className="h-6 w-6" />,
-    title: 'Controle total do seu estoque',
+    icon: <MessageSquare className="h-6 w-6" />,
+    title: 'Todos os leads num só lugar.',
     description:
-      'Filtre por modelo, preço, combustível e mais. Saiba exatamente o que você tem, o que está publicado e o que já vendeu.',
-    tag: 'Gestão',
+      'Mensagens do OLX, do Mercado Livre e do seu site caem todas na mesma tela. Você responde no WhatsApp em 1 clique. Nenhum cliente perdido na bagunça.',
+    tag: 'Leads',
   },
 ];
 
 const steps = [
   {
     number: '01',
-    title: 'Cadastre o veículo uma vez',
+    title: 'Bate uma foto. Digita a placa.',
     description:
-      'Preencha os dados do carro — marca, modelo, ano, fotos, preço. A IA já gera a descrição para você.',
+      'A gente puxa marca, modelo, ano, combustível e câmbio direto pela placa. Você só ajusta o preço, escolhe as fotos — e a IA já escreve a descrição.',
   },
   {
     number: '02',
-    title: 'Publique em tudo automaticamente',
+    title: '1 clique. Publicado em todo lugar.',
     description:
-      'Com um clique, seu carro aparece no OLX, Mercado Livre, no site da sua revenda e vira post para o Instagram.',
+      'OLX. Mercado Livre. Seu site. Post pronto pro Instagram. Tudo ao mesmo tempo. Sem login extra. Sem copiar e colar. Sem dor.',
   },
   {
     number: '03',
-    title: 'Vendeu? Retire de tudo em segundos',
+    title: 'Vendeu? "Marcar como vendido". Pronto.',
     description:
-      'Marque como vendido e o carro desaparece de todos os canais instantaneamente. Sem estresse, sem trabalho manual.',
+      'Em 5 segundos some de todo lugar. Os leads que continuarem chegando entram pro próximo carro do estoque. Trabalho zero, cliente feliz.',
   },
 ];
 
 const valuePros = [
-  'Site com domínio e identidade visual da sua loja',
-  'Publicação simultânea no OLX e Mercado Livre',
-  'Remoção instantânea ao marcar como vendido',
-  'Posts para Instagram criados por inteligência artificial',
-  'Catálogo digital para compartilhar no WhatsApp',
-  'Painel de controle com filtros e busca avançada',
-  'Integração de cores da sua logo automaticamente',
-  'Acesse de qualquer lugar, pelo celular ou computador',
+  'Site próprio com sua logo e cores',
+  'Publicação no OLX e Mercado Livre',
+  'Remoção instantânea ao vender',
+  'Posts pra Instagram feitos por IA',
+  'Catálogo digital pra WhatsApp',
+  'Painel de controle simples e direto',
+  'Acesso pelo celular, tablet ou PC',
+  'Suporte humano por WhatsApp',
+];
+
+const faqs = [
+  {
+    q: 'Preciso saber mexer em computador?',
+    a: 'Não. Se você sabe usar WhatsApp, você usa o AutosDigital. A gente faz a configuração inicial junto com você na primeira vez — depois é só cadastrar carro e vender.',
+  },
+  {
+    q: 'Vai dar trabalho aprender?',
+    a: 'Em 10 minutos você cadastra seu primeiro carro e publica em tudo. Não tem manual de 50 páginas. Tem botão claro e suporte por WhatsApp se você travar em algum lugar.',
+  },
+  {
+    q: 'E se eu não gostar e quiser cancelar?',
+    a: 'Cancela. Sem multa, sem letra miúda, sem "fica mais 3 meses pagando". Pix manual ou cobrança recorrente, a hora que pedir cancelamento, encerra no próximo vencimento.',
+  },
+  {
+    q: 'Posso testar antes de pagar?',
+    a: 'Sim. 14 dias grátis. Sem cartão de crédito. Cadastra a loja, publica até 3 carros, vê se serve pra você. Se não servir, é só fechar a aba.',
+  },
+  {
+    q: 'Funciona no meu celular?',
+    a: 'Funciona em qualquer celular, tablet ou computador. Foi feito pra você usar enquanto está no pátio mostrando o carro — não pra ficar preso no escritório.',
+  },
+  {
+    q: 'Meu sócio / vendedor também pode usar?',
+    a: 'Sim. Você cria os acessos da sua equipe sem custo extra. Cada um com login próprio, todos veem o mesmo estoque.',
+  },
+  {
+    q: 'Já tenho conta do OLX e Mercado Livre. Vou perder?',
+    a: 'Pelo contrário — a gente conecta nas SUAS contas existentes. O carro fica publicado na sua conta, na sua reputação, do seu jeito. A gente só economiza seu tempo.',
+  },
+  {
+    q: 'Por que é mais barato que BNDV / AutoCerto?',
+    a: 'Porque a gente é novo e quer crescer com você. Sem vendedor caro, sem prédio, sem 30 anos de gordura. A tecnologia é mais nova e mais rápida. E você paga pelo que importa.',
+  },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -127,9 +162,10 @@ export default function Home() {
             <span className="font-headline font-semibold text-base">AutosDigital</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            <a href="#solucoes" className="hover:text-white transition-colors">Soluções</a>
+            <a href="#solucoes" className="hover:text-white transition-colors">O que faz</a>
             <a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a>
-            <a href="#marketplaces" className="hover:text-white transition-colors">Integrações</a>
+            <a href="#planos" className="hover:text-white transition-colors">Planos</a>
+            <a href="#faq" className="hover:text-white transition-colors">Dúvidas</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link
@@ -144,7 +180,7 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 rounded px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#006d2f' }}
             >
-              Testar grátis
+              Testar 14 dias grátis
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -179,17 +215,17 @@ export default function Home() {
                   style={{ backgroundColor: 'rgba(57,128,244,0.15)', color: '#6fa3f7', border: '1px solid rgba(57,128,244,0.25)' }}
                 >
                   <Zap className="h-3 w-3" />
-                  Para revendas de veículos
+                  Feito pra revendas que querem crescer
                 </span>
 
                 <h1 className="font-headline font-bold text-4xl md:text-[52px] leading-[1.08] tracking-tight text-white mb-6">
-                  Publique seu estoque em todo lugar.{' '}
-                  <span style={{ color: '#6fa3f7' }}>Em minutos.</span>
+                  Venda mais carros{' '}
+                  <span style={{ color: '#6fa3f7' }}>sem trabalho a mais.</span>
                 </h1>
 
                 <p className="text-lg leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                  Cadastre o carro uma vez e ele vai automaticamente para o OLX, Mercado Livre e para o site da sua revenda.
-                  Quando vender, some de tudo em 1 clique.
+                  Site profissional pra sua loja + OLX e Mercado Livre integrados + leads centralizados num só lugar.
+                  Você cadastra o carro 1 vez. A gente cuida do resto.
                 </p>
 
                 <div className="flex flex-wrap gap-4 mb-10">
@@ -198,7 +234,7 @@ export default function Home() {
                     className="inline-flex items-center gap-2 rounded-lg px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
                     style={{ backgroundColor: '#006d2f', boxShadow: '0 4px 24px rgba(0,109,47,0.35)' }}
                   >
-                    Quero testar grátis
+                    Testar 14 dias grátis
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
@@ -211,7 +247,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-wrap gap-5">
-                  {['Sem contrato', 'Grátis para começar', 'Suporte incluso'].map((item) => (
+                  {['Sem cartão pra testar', 'Sem fidelidade', 'Cancela quando quiser'].map((item) => (
                     <div key={item} className="flex items-center gap-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
                       <CheckCircle2 className="h-4 w-4" style={{ color: '#4ade80' }} />
                       {item}
@@ -236,7 +272,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="font-mono text-[10px] px-4 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
-                      autosdigital.com.br/ivaipora-motors
+                      autosdigital.com.br/sualoja
                     </div>
                     <div className="w-10" />
                   </div>
@@ -304,13 +340,13 @@ export default function Home() {
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
             <div className="mx-auto mb-14 max-w-2xl text-center">
               <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: '#fff3cd', color: '#92400e' }}>
-                Você se identifica?
+                Reconhece alguma dessas?
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                A rotina de quem vende carro é mais difícil do que deveria ser
+                Quem vende carro perde horas no que não vende carro
               </h2>
               <p className="mt-4 text-base" style={{ color: '#45464d' }}>
-                Essas são as dores que ouvimos todo dia de quem trabalha com revenda.
+                Essas são as dores que ouvimos toda semana de quem trabalha com revenda.
               </p>
             </div>
 
@@ -324,7 +360,7 @@ export default function Home() {
                   <div className="mb-4 inline-flex rounded-lg p-2.5" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>
                     {pain.icon}
                   </div>
-                  <h3 className="font-headline font-semibold text-lg mb-2" style={{ color: '#0b1c30' }}>
+                  <h3 className="font-headline font-semibold text-lg mb-2 leading-snug" style={{ color: '#0b1c30' }}>
                     {pain.title}
                   </h3>
                   <p className="text-sm leading-relaxed" style={{ color: '#45464d' }}>
@@ -334,9 +370,12 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-10 text-center">
-              <p className="text-base font-semibold" style={{ color: '#0b1c30' }}>
-                A AutosDigital resolve tudo isso — em um só lugar.
+            <div className="mt-12 mx-auto max-w-2xl text-center rounded-xl p-6" style={{ backgroundColor: '#fff', border: '1px solid #e5eeff' }}>
+              <p className="font-headline font-semibold text-lg mb-2" style={{ color: '#0b1c30' }}>
+                A AutosDigital resolve tudo isso. Num só lugar. Num só clique.
+              </p>
+              <p className="text-sm" style={{ color: '#45464d' }}>
+                Sem mil sistemas pra logar. Sem agência pra contratar. Sem programador pra contratar.
               </p>
             </div>
           </div>
@@ -347,13 +386,13 @@ export default function Home() {
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
             <div className="mx-auto mb-14 max-w-2xl text-center">
               <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: 'rgba(57,128,244,0.15)', color: '#6fa3f7', border: '1px solid rgba(57,128,244,0.2)' }}>
-                Soluções
+                O que você ganha
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight text-white">
-                Tudo que sua revenda precisa para decolar no digital
+                O que faz uma loja vender mais. Numa tela só.
               </h2>
               <p className="mt-4 text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                Foco no que importa: vender carros. Deixe a tecnologia conosco.
+                Cada minuto seu valendo menos no computador e mais no balcão.
               </p>
             </div>
 
@@ -395,8 +434,11 @@ export default function Home() {
                 Como funciona
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                Do cadastro à venda em 3 passos simples
+                Do cadastro à venda em 3 passos
               </h2>
+              <p className="mt-4 text-base" style={{ color: '#45464d' }}>
+                Sem manual. Sem treinamento. Sem dor de cabeça.
+              </p>
             </div>
 
             <div className="grid gap-8 md:grid-cols-3 relative">
@@ -427,7 +469,7 @@ export default function Home() {
         </section>
 
         {/* ── Marketplace integration ───────────────────────────────────────── */}
-        <section id="marketplaces" style={{ backgroundColor: '#131b2e' }} className="py-20 md:py-28">
+        <section style={{ backgroundColor: '#131b2e' }} className="py-20 md:py-28">
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
             <div className="grid items-center gap-12 md:grid-cols-2">
 
@@ -440,10 +482,10 @@ export default function Home() {
                   </div>
                   <div className="p-4 space-y-3">
                     {[
-                      { name: 'Site da Loja', icon: '🌐', status: 'Ao vivo',  color: '#4ade80' },
-                      { name: 'OLX',           icon: '🟠', status: 'Ao vivo',  color: '#4ade80' },
-                      { name: 'Mercado Livre', icon: '🟡', status: 'Ao vivo',  color: '#4ade80' },
-                      { name: 'Instagram',     icon: '📸', status: 'Post gerado', color: '#c084fc' },
+                      { name: 'Site da sua loja',  icon: '🌐', status: 'Ao vivo',     color: '#4ade80' },
+                      { name: 'OLX',               icon: '🟠', status: 'Ao vivo',     color: '#4ade80' },
+                      { name: 'Mercado Livre',     icon: '🟡', status: 'Ao vivo',     color: '#4ade80' },
+                      { name: 'Instagram',         icon: '📸', status: 'Post pronto', color: '#c084fc' },
                     ].map((ch) => (
                       <div key={ch.name} className="flex items-center justify-between rounded-lg px-4 py-3" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <div className="flex items-center gap-3">
@@ -468,21 +510,20 @@ export default function Home() {
               {/* Right: copy */}
               <div className="order-1 md:order-2">
                 <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: 'rgba(57,128,244,0.15)', color: '#6fa3f7', border: '1px solid rgba(57,128,244,0.2)' }}>
-                  Integrações
+                  Integrações reais
                 </span>
                 <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight text-white mb-4">
-                  Um cadastro, todos os canais
+                  Um cadastro. <span style={{ color: '#6fa3f7' }}>Todo lugar.</span>
                 </h2>
                 <p className="text-base leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Seu carro publicado simultaneamente no site da sua loja, no OLX, no Mercado Livre — e ainda com post gerado pela IA para o Instagram.
-                  Sem repetição de trabalho.
+                  Conectamos direto nas SUAS contas do OLX e Mercado Livre. O carro fica publicado no seu nome, na sua reputação, do seu jeito. A gente só economiza seu tempo.
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    'Publicação simultânea em todos os canais',
+                    'Publicação simultânea no OLX, ML e seu site',
                     'Atualização automática de preço e fotos',
                     'Remoção instantânea ao vender',
-                    'Histórico de onde cada carro foi publicado',
+                    'Renovação automática dos anúncios todo dia',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#4ade80' }} />
@@ -514,17 +555,17 @@ export default function Home() {
                   Inteligência Artificial
                 </span>
                 <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight mb-4" style={{ color: '#0b1c30' }}>
-                  Posts para o Instagram prontos em segundos
+                  Post de Instagram que parece feito por agência
                 </h2>
                 <p className="text-base leading-relaxed mb-6" style={{ color: '#45464d' }}>
-                  Você não precisa de agência nem de copywriter. A IA da AutosDigital cria a legenda completa com todas as informações do carro, chamada para ação e hashtags relevantes.
+                  Sem agência cobrando R$ 800/mês. Sem copywriter. Sem ficar pensando "o que escrever". A IA monta a legenda com todas as informações do carro, chamada pra ação e hashtags da sua região. Você só aprova e posta.
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    'Legenda criada com os dados do veículo automaticamente',
-                    'Tom de voz adaptado para o seu público',
-                    'Hashtags relevantes incluídas',
-                    'Edite antes de publicar ou publique direto',
+                    'Legenda escrita com os dados do veículo',
+                    'Tom adaptado pro público da sua revenda',
+                    'Hashtags da sua cidade incluídas',
+                    'Edite antes ou poste direto — você decide',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-3 text-sm" style={{ color: '#45464d' }}>
                       <Sparkles className="h-4 w-4 shrink-0" style={{ color: '#9333ea' }} />
@@ -540,11 +581,11 @@ export default function Home() {
                   {/* IG header */}
                   <div className="flex items-center gap-3 px-4 py-3 bg-white border-b" style={{ borderColor: '#f0f0f0' }}>
                     <div className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
-                      IV
+                      AD
                     </div>
                     <div>
-                      <p className="font-semibold text-xs" style={{ color: '#0b1c30' }}>ivaipora_motors</p>
-                      <p className="text-[10px]" style={{ color: '#45464d' }}>Ivaiporã, Paraná</p>
+                      <p className="font-semibold text-xs" style={{ color: '#0b1c30' }}>sua_loja_oficial</p>
+                      <p className="text-[10px]" style={{ color: '#45464d' }}>Sua cidade, seu estado</p>
                     </div>
                   </div>
                   {/* Car image placeholder */}
@@ -569,7 +610,7 @@ export default function Home() {
                       <br /><br />
                       <span style={{ color: '#3980f4' }}>💬 Chame no WhatsApp e agende seu test drive!</span>
                       <br /><br />
-                      <span style={{ color: '#45464d' }}>#Honda #Civic #CarrosUsados #Ivaipora #Parana</span>
+                      <span style={{ color: '#45464d' }}>#Honda #Civic #CarrosUsados #SuaCidade</span>
                     </p>
                   </div>
                 </div>
@@ -584,13 +625,13 @@ export default function Home() {
             <div className="grid items-center gap-10 md:grid-cols-2">
               <div>
                 <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}>
-                  Tudo incluso
+                  Tudo no mesmo preço
                 </span>
                 <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight mb-4" style={{ color: '#0b1c30' }}>
-                  Uma ferramenta completa para sua revenda crescer
+                  Um plano com tudo. Sem upsell. Sem letra miúda.
                 </h2>
                 <p className="text-base leading-relaxed mb-8" style={{ color: '#45464d' }}>
-                  Sem precisar contratar agência, designer ou programador. A AutosDigital entrega tudo que você precisa para ter uma presença digital profissional do dia 1.
+                  Não tem "pacote básico" que não serve, "pro" que tem o que falta no básico, e "premium" pra empurrar mais. É 1 plano. Com tudo. Pronto.
                 </p>
                 <Link
                   href="/signup"
@@ -619,17 +660,17 @@ export default function Home() {
         </section>
 
         {/* ── Pricing ──────────────────────────────────────────────────────── */}
-        <section className="py-20 md:py-28" style={{ backgroundColor: '#f8f9ff' }}>
+        <section id="planos" className="py-20 md:py-28" style={{ backgroundColor: '#f8f9ff' }}>
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
             <div className="mx-auto mb-14 max-w-2xl text-center">
               <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}>
                 Planos
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                Simples e sem surpresas
+                Mais barato que <span style={{ color: '#dc2626', textDecoration: 'line-through' }}>BNDV</span>. Mais novo que todos.
               </h2>
               <p className="mt-4 text-base" style={{ color: '#45464d' }}>
-                Um plano com tudo incluído. Sem taxas escondidas, sem contrato de fidelidade.
+                Cancele quando quiser. Sem multa, sem fidelidade, sem letra miúda.
               </p>
             </div>
 
@@ -643,19 +684,19 @@ export default function Home() {
                 <div className="mb-6">
                   <p className="font-mono text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#45464d' }}>Mensal</p>
                   <div className="flex items-end gap-1.5">
-                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 420</span>
+                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 449</span>
                     <span className="text-base mb-1" style={{ color: '#45464d' }}>/mês</span>
                   </div>
-                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>Cobrado mensalmente · cancele quando quiser</p>
+                  <p className="text-sm mt-1" style={{ color: '#45464d' }}>Pix recorrente · cancele quando quiser</p>
                 </div>
 
                 <ul className="space-y-2.5 mb-8 flex-1">
                   {[
-                    'Todas as funcionalidades inclusas',
-                    'Site com URL exclusiva da loja',
-                    'Estoque ilimitado de veículos',
-                    'OLX + Mercado Livre + Instagram IA',
-                    'Suporte via WhatsApp',
+                    'Tudo incluído. Estoque ilimitado.',
+                    'Site próprio + OLX + Mercado Livre',
+                    'Posts de Instagram por IA',
+                    'Leads centralizados num só lugar',
+                    'Suporte humano por WhatsApp',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: '#0b1c30' }}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#006d2f' }} />
@@ -669,7 +710,7 @@ export default function Home() {
                   className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-semibold transition-colors hover:bg-[#eff4ff]"
                   style={{ border: '1.5px solid #3980f4', color: '#3980f4' }}
                 >
-                  Começar agora
+                  Começar testar grátis
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -684,28 +725,28 @@ export default function Home() {
                   className="absolute top-0 right-8 font-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-b"
                   style={{ backgroundColor: '#006d2f', color: '#fff' }}
                 >
-                  Melhor valor
+                  Economize R$ 1.068
                 </div>
 
                 <div className="mb-6">
                   <p className="font-mono text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#3980f4' }}>Anual</p>
                   <div className="flex items-end gap-1.5">
-                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 350</span>
+                    <span className="font-headline font-bold text-4xl" style={{ color: '#0b1c30' }}>R$ 360</span>
                     <span className="text-base mb-1" style={{ color: '#45464d' }}>/mês</span>
                   </div>
                   <p className="text-sm mt-1" style={{ color: '#45464d' }}>
-                    R$ 4.200 cobrado anualmente ·{' '}
-                    <span style={{ color: '#006d2f', fontWeight: 600 }}>economize R$ 840/ano</span>
+                    R$ 4.320 à vista no Pix ·{' '}
+                    <span style={{ color: '#006d2f', fontWeight: 600 }}>20% off</span>
                   </p>
                 </div>
 
                 <ul className="space-y-2.5 mb-8 flex-1">
                   {[
                     'Tudo do plano mensal',
-                    '2 meses grátis no ano',
+                    'Pague à vista no Pix — 0% taxa',
+                    'Preço travado por 12 meses',
                     'Prioridade no suporte',
                     'Acesso antecipado a novidades',
-                    'Desconto garantido por 12 meses',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2.5 text-sm" style={{ color: '#0b1c30' }}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#006d2f' }} />
@@ -719,7 +760,7 @@ export default function Home() {
                   className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-bold text-white transition-all hover:opacity-90"
                   style={{ backgroundColor: '#006d2f' }}
                 >
-                  Assinar plano anual
+                  Quero o desconto anual
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -731,8 +772,50 @@ export default function Home() {
               style={{ borderColor: '#e5eeff', backgroundColor: '#f0f7ff' }}
             >
               <p className="text-sm" style={{ color: '#0b1c30' }}>
-                💡 <strong>Conta rápida:</strong> se o site trouxer <strong>1 venda a mais por mês</strong>, o plano já se paga — e sobra muito.
+                💡 <strong>Conta rápida:</strong> 1 carro a mais vendido por causa do sistema = plano pago por <strong>12 meses</strong>. E ainda sobra.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+        <section id="faq" className="py-20 md:py-24" style={{ backgroundColor: '#fff' }}>
+          <div className="mx-auto max-w-[1280px] px-4 md:px-16">
+            <div className="mx-auto mb-14 max-w-2xl text-center">
+              <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1 rounded mb-4" style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}>
+                Dúvidas comuns
+              </span>
+              <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
+                As perguntas que todo revendedor faz
+              </h2>
+              <p className="mt-4 text-base" style={{ color: '#45464d' }}>
+                Se a sua dúvida não estiver aqui, chama no WhatsApp — a gente responde rápido.
+              </p>
+            </div>
+
+            <div className="mx-auto max-w-3xl grid gap-4">
+              {faqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border p-5 transition-colors hover:border-[#3980f4]"
+                  style={{ borderColor: '#e5eeff', backgroundColor: '#fff' }}
+                >
+                  <summary className="flex cursor-pointer items-center justify-between gap-4 list-none">
+                    <span className="font-headline font-semibold text-base" style={{ color: '#0b1c30' }}>
+                      {faq.q}
+                    </span>
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-sm transition-transform group-open:rotate-45"
+                      style={{ backgroundColor: '#eff4ff', color: '#3980f4' }}
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: '#45464d' }}>
+                    {faq.a}
+                  </p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
@@ -751,24 +834,24 @@ export default function Home() {
           />
           <div className="relative mx-auto max-w-[1280px] px-4 md:px-16 text-center">
             <span className="inline-block font-mono text-[11px] font-medium uppercase tracking-widest px-3 py-1.5 rounded-full mb-6" style={{ backgroundColor: 'rgba(57,128,244,0.15)', color: '#6fa3f7', border: '1px solid rgba(57,128,244,0.25)' }}>
-              Comece hoje mesmo
+              Comece hoje
             </span>
             <h2 className="font-headline font-bold text-4xl md:text-5xl text-white tracking-tight max-w-2xl mx-auto mb-4">
-              Sua revenda no digital em menos de 10 minutos
+              Sua revenda na internet em <span style={{ color: '#6fa3f7' }}>10 minutos.</span>
             </h2>
             <p className="text-lg mb-10 max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              Crie sua conta gratuitamente, cadastre seu primeiro carro e veja ele publicado em todo lugar antes do almoço.
+              Crie sua conta grátis. Cadastre o primeiro carro. Veja ele publicado em todo lugar antes do café da tarde.
             </p>
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 rounded-lg px-10 py-4 text-base font-bold text-white transition-all hover:scale-[1.02] hover:shadow-2xl"
               style={{ backgroundColor: '#006d2f', boxShadow: '0 4px 28px rgba(0,109,47,0.4)' }}
             >
-              Começar agora — é grátis
+              Testar 14 dias grátis
               <ArrowRight className="h-5 w-5" />
             </Link>
             <p className="mt-4 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Sem cartão de crédito · Sem contrato · Suporte humano incluso
+              Sem cartão de crédito · Sem fidelidade · Suporte humano por WhatsApp
             </p>
           </div>
         </section>
@@ -784,7 +867,7 @@ export default function Home() {
                 <span className="font-headline font-semibold text-sm">AutosDigital</span>
               </div>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                A plataforma de gestão e marketing para revendas de veículos.
+                O sistema completo pra revenda de veículos.
               </p>
             </div>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
