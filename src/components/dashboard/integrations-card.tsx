@@ -12,6 +12,8 @@ interface IntegrationsCardProps {
   dealershipSlug: string;
   mlConnected:    boolean;
   mlUserId?:      string;
+  mlHasRefreshToken?: boolean;
+  mlExpiresAt?:   string | Date | null;
   olxConnected:   boolean;
 }
 
@@ -20,6 +22,8 @@ export function IntegrationsCard({
   dealershipSlug,
   mlConnected,
   mlUserId,
+  mlHasRefreshToken,
+  mlExpiresAt,
   olxConnected: olxConnectedProp,
 }: IntegrationsCardProps) {
   const { toast } = useToast();
@@ -207,6 +211,28 @@ export function IntegrationsCard({
                 <CheckCircle2 className="h-4 w-4" style={{ color: '#006d2f' }} />
                 <span>Conta conectada{mlUserId ? ` (ID: ${mlUserId})` : ''}. Novos veículos serão publicados automaticamente.</span>
               </div>
+
+              {/* Warning when refresh_token is missing — without it, the dealer
+                  will need to manually reconnect every 6h when the access_token expires. */}
+              {!mlHasRefreshToken && (
+                <div className="flex items-start gap-2 rounded border p-3 text-xs" style={{ borderColor: '#fde68a', backgroundColor: '#fffbeb' }}>
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+                  <div style={{ color: '#92400e' }}>
+                    <p className="font-semibold mb-1">⚠️ Renovação automática desabilitada</p>
+                    <p className="mb-2">
+                      Esta conexão não envia <code className="bg-amber-100 px-1 rounded">refresh_token</code>, então o token expira em 6h e a integração para de funcionar até reconectar manualmente.
+                    </p>
+                    <p className="font-semibold mb-1">Para corrigir:</p>
+                    <ol className="space-y-0.5 list-decimal list-inside">
+                      <li>Acesse <a href="https://developers.mercadolibre.com.br/devcenter" target="_blank" rel="noopener noreferrer" className="underline">developers.mercadolibre.com.br/devcenter</a></li>
+                      <li>Abra o app AutosDigital → <strong>Fluxos OAuth</strong></li>
+                      <li>Marque <strong>"Refresh Token"</strong> e salve</li>
+                      <li>Volte aqui, desconecte e reconecte UMA vez</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleDisconnectML}
                 disabled={mlDisconnecting}

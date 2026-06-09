@@ -302,6 +302,8 @@ export default function SettingsPage() {
                             dealershipSlug={dealershipData.slug}
                             mlConnected={dealershipData?.integrations?.mercadolivre?.connected === true}
                             mlUserId={dealershipData?.integrations?.mercadolivre?.userId}
+                            mlHasRefreshToken={Boolean(dealershipData?.integrations?.mercadolivre?.refreshToken)}
+                            mlExpiresAt={dealershipData?.integrations?.mercadolivre?.expiresAt}
                             olxConnected={dealershipData?.integrations?.olx?.connected === true}
                         />
                     </Suspense>
