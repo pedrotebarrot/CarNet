@@ -248,14 +248,26 @@ export async function POST(request: NextRequest) {
 
   let result: any;
   try {
-    switch (notif.topic) {
-      case 'questions':    result = await handleQuestion(notif, dealership, dealershipId); break;
-      case 'messages':     result = await handleMessage(notif, dealership, dealershipId);  break;
-      case 'items':        result = await handleItem(notif, dealershipId);                 break;
-      case 'vis_leads':
-      case 'vis-leads':
-      case 'leads':        result = await handleVisLead(notif, dealershipId);              break;
-      default:             result = { skipped: `topic ${notif.topic}` };
+    const topic = (notif.topic ?? '').toLowerCase();
+    // VIS Leads has multiple sub-topics — all start with "vis" or contain "lead"
+    const isVisLead =
+      topic.startsWith('vis') ||
+      topic === 'leads' ||
+      topic === 'whatsapp_call' ||
+      topic.includes('visit_request') ||
+      topic.includes('contact_request') ||
+      topic.includes('reservation');
+
+    if (isVisLead) {
+      result = await handleVisLead(notif, dealershipId);
+    } else if (topic === 'questions') {
+      result = await handleQuestion(notif, dealership, dealershipId);
+    } else if (topic === 'messages' || topic === 'messages_created' || topic === 'messages_read') {
+      result = await handleMessage(notif, dealership, dealershipId);
+    } else if (topic === 'items' || topic === 'items_prices' || topic === 'stock_locations') {
+      result = await handleItem(notif, dealershipId);
+    } else {
+      result = { skipped: `topic ${notif.topic}` };
     }
   } catch (err: any) {
     console.error('[ML notification] handler error:', err);
