@@ -14,9 +14,12 @@ function fmtDate(d: any): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(dt);
 }
 
-function sourceLabel(s: string): { label: string; bg: string; color: string } {
+function sourceLabel(s: string, kind?: string): { label: string; bg: string; color: string } {
   if (s === 'olx')          return { label: 'OLX',          bg: '#FF6B00', color: '#fff' };
-  if (s === 'mercadolivre') return { label: 'Mercado Livre', bg: '#FFE600', color: '#333' };
+  if (s === 'mercadolivre') {
+    const sub = kind === 'question' ? ' · Pergunta' : kind === 'vis_lead' ? ' · Lead' : kind === 'message' ? ' · Msg' : '';
+    return { label: `Mercado Livre${sub}`, bg: '#FFE600', color: '#333' };
+  }
   return { label: s || 'Outro', bg: '#e5eeff', color: '#0b1c30' };
 }
 
@@ -145,7 +148,7 @@ export default function LeadsPage() {
       {/* List */}
       <div className="space-y-3">
         {filtered.map((lead: any) => {
-          const src = sourceLabel(lead.source);
+          const src = sourceLabel(lead.source, lead.sourceKind);
           return (
             <div key={lead.id} className="rounded-lg border bg-white p-4" style={{ borderColor: '#e5eeff' }}>
               <div className="flex items-start justify-between gap-4">
@@ -228,7 +231,7 @@ export default function LeadsPage() {
                   )}
                 </div>
 
-                {lead.status === 'new' && lead.source !== 'mercadolivre' && (
+                {lead.status === 'new' && lead.sourceKind !== 'question' && (
                   <button
                     onClick={() => markContacted(lead.id)}
                     className="shrink-0 rounded px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80"

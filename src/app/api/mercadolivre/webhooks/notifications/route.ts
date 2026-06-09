@@ -156,6 +156,50 @@ async function handleMessage(notif: MLNotification, dealership: any, dealershipI
   return { ok: true };
 }
 
+/**
+ * VIS Leads — vehicle/real-estate lead notifications.
+ *
+ * Different from the generic "questions" topic: VIS leads include the
+ * buyer's full contact info (name, phone, email) upfront, since the
+ * vertical works as a classifieds lead-gen platform.
+ *
+ * Resource path is typically /vis/leads/{id} or /leads/{id}.
+ */
+async function handleVisLead(notif: MLNotification, dealershipId: string) {
+  const db    = getAdminDb();
+  const token = await getValidToken(dealershipId);
+  if (!token) return { skipped: 'no token' };
+
+  const res = await fetch(`${ML_API}${notif.resource}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return { error: `fetch vis lead ${res.status}` };
+  const lead: any = await res.json();
+
+  // VIS leads usually contain item_id, contact info, buyer message
+  const itemId   = String(lead.item_id ?? lead.itemId ?? '');
+  const vehicle  = itemId ? await findVehicleByMlItemId(dealershipId, itemId) : null;
+  const leadIdMl = String(lead.id ?? notif.resource?.split('/').pop() ?? '');
+
+  await db.collection('leads').doc(`ml-vis-${leadIdMl}`).set({
+    dealershipId,
+    vehicleId:    vehicle?.id ?? null,
+    source:       'mercadolivre',
+    sourceKind:   'vis_lead',
+    mlLeadId:     leadIdMl,
+    mlItemId:     itemId || null,
+    name:         lead.contact?.name      ?? lead.name      ?? lead.buyer?.name      ?? null,
+    email:        lead.contact?.email     ?? lead.email     ?? lead.buyer?.email     ?? null,
+    phone:        lead.contact?.phone     ?? lead.phone     ?? lead.buyer?.phone     ?? null,
+    message:      lead.message ?? lead.text ?? null,
+    status:       'new',
+    receivedAt:   new Date(lead.date_created ?? lead.created_at ?? Date.now()),
+    rawPayload:   lead,
+  }, { merge: true });
+
+  return { ok: true, leadId: `ml-vis-${leadIdMl}` };
+}
+
 async function handleItem(notif: MLNotification, dealershipId: string) {
   // /items/MLB1234567 → vehicle status update
   const itemId = notif.resource?.split('/').pop() ?? '';
@@ -208,6 +252,9 @@ export async function POST(request: NextRequest) {
       case 'questions':    result = await handleQuestion(notif, dealership, dealershipId); break;
       case 'messages':     result = await handleMessage(notif, dealership, dealershipId);  break;
       case 'items':        result = await handleItem(notif, dealershipId);                 break;
+      case 'vis_leads':
+      case 'vis-leads':
+      case 'leads':        result = await handleVisLead(notif, dealershipId);              break;
       default:             result = { skipped: `topic ${notif.topic}` };
     }
   } catch (err: any) {
