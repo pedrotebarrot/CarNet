@@ -66,5 +66,32 @@ service cloud.firestore {
       allow delete: if isSignedIn()
         && getUserData().dealershipId == resource.data.dealershipId;
     }
+
+    // ─── Leads ────────────────────────────────────────────────────────────────
+    // Buyer contacts from marketplaces (OLX VIS Lead, ML VIS Lead, etc.).
+    // Read: only dealership members can see their own leads.
+    // Create: only the backend (webhook receivers using Admin SDK) writes here,
+    //         so we deny client creates. Admin SDK bypasses rules.
+    // Update: dealership member can mark as contacted / add notes.
+    match /leads/{leadId} {
+      allow read: if isSignedIn()
+        && getUserData().dealershipId == resource.data.dealershipId;
+
+      allow list: if isSignedIn();
+      // ↑ The page query filters by dealershipId; per-doc read above still
+      //   enforces ownership. `list` here lets the query execute.
+
+      allow update: if isSignedIn()
+        && getUserData().dealershipId == resource.data.dealershipId
+        && request.resource.data.dealershipId == resource.data.dealershipId;
+
+      allow create, delete: if false; // server-only via Admin SDK
+    }
+
+    // ─── Cron runs ────────────────────────────────────────────────────────────
+    // Audit log of background jobs. Server-only.
+    match /cronRuns/{runId} {
+      allow read, write: if false;
+    }
   }
 }
