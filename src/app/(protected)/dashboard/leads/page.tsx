@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, query, where, orderBy, limit, updateDoc } from 'firebase/firestore';
 import { Loader2, Mail, Phone, MessageSquare, Car, Send, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
@@ -31,13 +31,13 @@ export default function LeadsPage() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [replyingId,  setReplyingId]  = useState<string | null>(null);
 
-  const userDocRef = useMemo(() =>
+  const userDocRef = useMemoFirebase(() =>
     user ? doc(firestore, 'users', user.uid) : null,
     [user, firestore]
   );
   const { data: userData } = useDoc(userDocRef);
 
-  const leadsQuery = useMemo(() => {
+  const leadsQuery = useMemoFirebase(() => {
     if (!userData?.dealershipId) return null;
     return query(
       collection(firestore, 'leads'),
