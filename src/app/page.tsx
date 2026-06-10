@@ -667,7 +667,7 @@ export default function Home() {
                 Planos
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                Mais barato que <span style={{ color: '#dc2626', textDecoration: 'line-through' }}>a concorrência</span>. Mais simples também.
+                Mais barato que <span style={{ color: '#dc2626', textDecoration: 'line-through' }}>a concorrência</span>. E muito mais funcional.
               </h2>
               <p className="mt-4 text-base" style={{ color: '#45464d' }}>
                 Cancele quando quiser. Sem multa, sem fidelidade, sem letra miúda.
