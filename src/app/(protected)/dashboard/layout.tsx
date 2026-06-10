@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { SubscriptionGuard } from '@/components/dashboard/subscription-guard';
 
 export default function DashboardLayout({
   children,
@@ -186,7 +187,9 @@ export default function DashboardLayout({
         </header>
 
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6" style={{ backgroundColor: '#f8f9ff' }}>
-          {children}
+          <SubscriptionGuard dealership={dealershipData}>
+            {children}
+          </SubscriptionGuard>
         </main>
       </div>
     </div>

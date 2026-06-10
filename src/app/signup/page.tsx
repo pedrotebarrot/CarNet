@@ -12,7 +12,8 @@ import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { generateSlug } from '@/lib/utils/slug';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, Sparkles } from 'lucide-react';
+import { PLANS } from '@/lib/billing/plans';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -76,15 +77,31 @@ export default function SignupPage() {
       const dealershipId = dealershipRef.id;
       const appUrl = window.location.origin;
 
+      // Trial subscription — 14 days starting now. Without this the dealer
+      // would land on the dashboard and immediately hit the SubscriptionGuard
+      // expired screen because there'd be no subscription record at all.
+      const trialDays = PLANS.trial.durationDays;
+      const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
+
       await setDoc(dealershipRef, {
         id: dealershipId, name: dealershipName, slug: uniqueSlug,
         phone, address, logoUrl, ownerId: user.uid, createdAt: new Date(),
+        subscription: {
+          planId:      'trial',
+          status:      'trial',
+          startedAt:   new Date(),
+          paidUntil:   trialEndsAt,
+          trialEndsAt: trialEndsAt,
+        },
       });
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid, email: user.email, dealershipId, role: 'admin',
       });
 
-      toast({ title: '🎉 Conta criada!', description: `Seu site está no ar: ${appUrl}/${uniqueSlug}` });
+      toast({
+        title: '🎉 Conta criada! Seu trial de 14 dias começou.',
+        description: `Cadastre seu primeiro carro pra ver ele publicado em ${appUrl}/${uniqueSlug}`,
+      });
       router.push('/dashboard');
     } catch (error: any) {
       toast({ title: 'Erro ao criar conta', description: error.message || 'Ocorreu um erro.', variant: 'destructive' });
@@ -110,7 +127,34 @@ export default function SignupPage() {
 
           <div className="mb-6 text-center">
             <h1 className="font-headline font-bold text-2xl" style={{ color: '#0b1c30' }}>Criar sua conta</h1>
-            <p className="mt-1 text-sm" style={{ color: '#45464d' }}>Comece a gerenciar sua revenda hoje mesmo.</p>
+            <p className="mt-1 text-sm" style={{ color: '#45464d' }}>Sua loja na internet em menos de 10 minutos.</p>
+          </div>
+
+          {/* Trial benefits banner — sets expectations clearly */}
+          <div
+            className="mb-6 rounded-lg border p-4"
+            style={{ borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4" style={{ color: '#006d2f' }} />
+              <p className="font-headline font-semibold text-sm" style={{ color: '#065f46' }}>
+                14 dias grátis pra testar
+              </p>
+            </div>
+            <ul className="space-y-1 text-xs" style={{ color: '#065f46' }}>
+              <li className="flex items-start gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>Sem cartão de crédito · Sem cobrança automática</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>Cadastre carros, publique no OLX e Mercado Livre</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>Se gostar, ativa a assinatura via Pix</span>
+              </li>
+            </ul>
           </div>
 
           <form onSubmit={handleSignup} className="flex flex-col gap-4">

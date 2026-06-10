@@ -31,13 +31,27 @@ service cloud.firestore {
 
       // During signup the user doc does not exist yet, so we cannot call
       // getUserData(). Instead we verify the caller is setting themselves as owner.
+      // If they include a subscription block at creation it must be a valid trial —
+      // dealers can't grant themselves a paid plan from the client.
       allow create: if isSignedIn()
-        && request.resource.data.ownerId == request.auth.uid;
+        && request.resource.data.ownerId == request.auth.uid
+        && (
+          !('subscription' in request.resource.data)
+          || (
+            request.resource.data.subscription.planId == 'trial'
+            && request.resource.data.subscription.status == 'trial'
+          )
+        );
 
       // Update: either the original owner OR a verified member may update.
       // ownerId is immutable after creation.
+      // subscription is also immutable from the client — it is set only by
+      // the server (Admin SDK) when Pedro marks a Pix as received in /admin.
+      // Without this guard, a dealer could open devtools and extend their
+      // own paidUntil to year 3000.
       allow update: if isSignedIn()
         && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.subscription == resource.data.subscription
         && (
           resource.data.ownerId == request.auth.uid
           || getUserData().dealershipId == dealershipId
