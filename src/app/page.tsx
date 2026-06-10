@@ -9,10 +9,10 @@ import { Logo } from '@/components/logo';
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const stats = [
-  { value: '1 clique',     label: 'Publica em todo lugar' },
-  { value: '0 código',     label: 'Não precisa saber mexer' },
+  { value: '1 clique',       label: 'Publica em todo lugar' },
+  { value: 'Sem enrolação',  label: 'Cadastra e tá no ar' },
   { value: 'Sem fidelidade', label: 'Cancela quando quiser' },
-  { value: 'Humano',       label: 'Suporte por WhatsApp' },
+  { value: 'Humano',         label: 'Suporte por WhatsApp' },
 ];
 
 const pains = [
@@ -143,7 +143,7 @@ const faqs = [
     a: 'Pelo contrário — a gente conecta nas SUAS contas existentes. O carro fica publicado na sua conta, na sua reputação, do seu jeito. A gente só economiza seu tempo.',
   },
   {
-    q: 'Por que é mais barato que BNDV / AutoCerto?',
+    q: 'Por que é mais barato que os outros sistemas do mercado?',
     a: 'Porque a gente é novo e quer crescer com você. Sem vendedor caro, sem prédio, sem 30 anos de gordura. A tecnologia é mais nova e mais rápida. E você paga pelo que importa.',
   },
 ];
@@ -303,9 +303,9 @@ export default function Home() {
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             {car.status === 'available' ? (
-                              <div className="flex gap-1">
-                                {['OLX', 'ML', 'Site'].map((p) => (
-                                  <span key={p} className="font-mono text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(57,128,244,0.2)', color: '#6fa3f7' }}>{p}</span>
+                              <div className="flex gap-1 flex-wrap justify-end">
+                                {['OLX', 'Mercado Livre', 'Site'].map((p) => (
+                                  <span key={p} className="font-mono text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap" style={{ backgroundColor: 'rgba(57,128,244,0.2)', color: '#6fa3f7' }}>{p}</span>
                                 ))}
                               </div>
                             ) : (
@@ -343,7 +343,7 @@ export default function Home() {
                 Reconhece alguma dessas?
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                Quem vende carro perde horas no que não vende carro
+                Você devia estar vendendo. <span style={{ color: '#3980f4' }}>Não digitando.</span>
               </h2>
               <p className="mt-4 text-base" style={{ color: '#45464d' }}>
                 Essas são as dores que ouvimos toda semana de quem trabalha com revenda.
@@ -667,7 +667,7 @@ export default function Home() {
                 Planos
               </span>
               <h2 className="font-headline font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#0b1c30' }}>
-                Mais barato que <span style={{ color: '#dc2626', textDecoration: 'line-through' }}>BNDV</span>. Mais novo que todos.
+                Mais barato que <span style={{ color: '#dc2626', textDecoration: 'line-through' }}>a concorrência</span>. Mais simples também.
               </h2>
               <p className="mt-4 text-base" style={{ color: '#45464d' }}>
                 Cancele quando quiser. Sem multa, sem fidelidade, sem letra miúda.
