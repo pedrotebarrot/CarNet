@@ -81,7 +81,7 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
         </p>
       </div>
       <a
-        href="https://wa.me/5543991234567?text=Quero%20continuar%20usando%20o%20AutosDigital%20depois%20do%20teste"
+        href="https://wa.me/5511967329111?text=Quero%20continuar%20usando%20o%20AutosDigital%20depois%20do%20teste"
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90"
@@ -177,7 +177,7 @@ function BlockedScreen({ dealership, sub }: { dealership: any; sub: Subscription
         )}
 
         <a
-          href={`https://wa.me/5543991234567?text=${waText}`}
+          href={`https://wa.me/5511967329111?text=${waText}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full rounded-lg py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 mb-3"

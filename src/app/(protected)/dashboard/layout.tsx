@@ -13,6 +13,7 @@ import { Logo } from "@/components/logo";
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { SubscriptionGuard } from '@/components/dashboard/subscription-guard';
+import { SupportWhatsAppButton } from '@/components/dashboard/support-whatsapp-button';
 
 export default function DashboardLayout({
   children,
@@ -191,6 +192,8 @@ export default function DashboardLayout({
             {children}
           </SubscriptionGuard>
         </main>
+
+        <SupportWhatsAppButton dealershipName={dealershipData?.name} />
       </div>
     </div>
   );
