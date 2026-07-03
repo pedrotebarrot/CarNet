@@ -46,6 +46,31 @@ export async function GET(request: NextRequest) {
     // OLX tokens: access_token, refresh_token, expires_in, token_type
     const expiresAt = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000);
 
+    // Fetch the OLX account holder's name/email. OLX support asks for this
+    // email when registering each dealer's feed, so capturing it at connect
+    // time saves a support round-trip per customer.
+    // NOTE: OLX's WAF returns 543/544 to requests without a browser-like
+    // User-Agent — the header below is required, not cosmetic.
+    let accountEmail: string | null = null;
+    let accountName:  string | null = null;
+    try {
+      const infoRes = await fetch('https://apps.olx.com.br/oauth_api/basic_user_info', {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent':   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        },
+        body: JSON.stringify({ access_token: tokens.access_token }),
+      });
+      if (infoRes.ok) {
+        const info = await infoRes.json();
+        accountEmail = info?.user_email ?? null;
+        accountName  = info?.user_name  ?? null;
+      }
+    } catch (err) {
+      console.warn('[OLX callback] basic_user_info failed (non-fatal):', err);
+    }
+
     const db = getAdminDb();
 
     await db.doc(`dealerships/${dealershipId}`).update({
@@ -56,6 +81,8 @@ export async function GET(request: NextRequest) {
         connectedAt:  new Date(),
         ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
         ...(tokens.user_id       ? { userId: tokens.user_id }             : {}),
+        ...(accountEmail         ? { accountEmail }                       : {}),
+        ...(accountName          ? { accountName }                        : {}),
       },
     });
 
