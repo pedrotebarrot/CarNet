@@ -255,21 +255,35 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   };
 
   const handlePublishOLX = async () => {
+    const values = form.getValues();
     setIsOLXLoading(true);
     try {
       const result = await publishVehicleToOlx({
         dealershipId: vehicle.dealershipId,
         vehicleId:    vehicle.id,
-        make: '', model: '', year: 0, fuel: '', transmission: '', color: '',
+        make:         values.make,
+        model:        values.model,
+        year:         Number(values.year),
+        modelYear:    Number(values.modelYear),
+        price:        Number(values.price),
+        mileage:      Number(values.mileage),
+        fuel:         values.fuel,
+        transmission: values.transmission,
+        color:        values.color,
+        doors:        Number(values.doors),
+        plate:        values.plate,
+        plateEnding:  values.plateEnding,
+        description:  values.description,
+        images:       currentImages,
       });
       if (result.success) {
         setOlxEnabled(true);
-        toast({ title: "✅ Adicionado ao feed OLX!", description: "Será sincronizado na próxima atualização da OLX." });
+        toast({ title: "✅ Enviado para a OLX!", description: "O anúncio será processado e publicado em alguns minutos." });
       } else {
-        toast({ title: "Erro ao ativar na OLX", description: result.error, variant: "destructive" });
+        toast({ title: "Erro ao publicar na OLX", description: result.error, variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Erro ao ativar na OLX", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao publicar na OLX", description: err.message, variant: "destructive" });
     } finally {
       setIsOLXLoading(false);
     }
@@ -278,9 +292,9 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const handleUnpublishOLX = async () => {
     setIsOLXLoading(true);
     try {
-      await unpublishVehicleFromOlx(vehicle.id);
+      await unpublishVehicleFromOlx(vehicle.id, vehicle.dealershipId);
       setOlxEnabled(false);
-      toast({ title: "Removido do feed OLX." });
+      toast({ title: "Anúncio removido da OLX." });
     } catch (err: any) {
       toast({ title: "Erro ao remover da OLX", description: err.message, variant: "destructive" });
     } finally {
@@ -527,10 +541,10 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
               <>
                 <div className="flex items-center gap-2 text-sm" style={{ color: '#065f46' }}>
                   <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                  Ativo no feed OLX
+                  Anúncio enviado à OLX
                 </div>
                 <p className="text-xs" style={{ color: '#45464d' }}>
-                  Este veículo está incluso no feed e será sincronizado com a OLX.
+                  A OLX processa e publica em alguns minutos após o envio.
                 </p>
                 <a
                   href="https://www.olx.com.br/minha-conta/meus-anuncios"
@@ -551,13 +565,13 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   disabled={isOLXLoading}
                 >
                   {isOLXLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                  Remover do feed OLX
+                  Remover anúncio da OLX
                 </Button>
               </>
             ) : (
               <>
                 <p className="text-xs" style={{ color: '#45464d' }}>
-                  Veículo não está no feed da OLX.
+                  Veículo ainda não publicado na OLX.
                 </p>
                 <Button
                   type="button"
@@ -568,7 +582,7 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
                   disabled={isOLXLoading}
                 >
                   {isOLXLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                  Adicionar ao feed OLX
+                  Publicar na OLX
                 </Button>
               </>
             )}
