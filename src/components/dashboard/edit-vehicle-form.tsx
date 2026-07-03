@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Search, Sparkles, ExternalLink } from 'lucide-react';
+import { Loader2, Search, Sparkles, ExternalLink, RefreshCw } from 'lucide-react';
 import { SortablePhotoGrid, PhotoItem } from '@/components/dashboard/sortable-photo-grid';
 
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import { useFirestore, useStorage } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { publishVehicleToML, unpublishVehicleFromML } from '@/actions/mercadolivre';
-import { publishVehicleToOlx, unpublishVehicleFromOlx } from '@/actions/olx';
+import { publishVehicleToOlx, unpublishVehicleFromOlx, checkOlxImportStatus } from '@/actions/olx';
 
 const vehicleSchema = z.object({
   plate: z.string().min(7).max(7),
@@ -57,6 +57,9 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
   const [isMLLoading,  setIsMLLoading]  = useState(false);
   const [olxEnabled,   setOlxEnabled]   = useState<boolean>(vehicle.olxEnabled === true);
   const [isOLXLoading, setIsOLXLoading] = useState(false);
+  const [olxStatus,    setOlxStatus]    = useState<any>(vehicle.olxStatus ?? null);
+  const [olxImportToken, setOlxImportToken] = useState<string | null>(vehicle.publishedTo?.olx?.importToken ?? null);
+  const [isOlxStatusLoading, setIsOlxStatusLoading] = useState(false);
   
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -278,6 +281,8 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
       });
       if (result.success) {
         setOlxEnabled(true);
+        setOlxImportToken(result.importToken ?? null);
+        setOlxStatus({ status: 'pending', operation: 'insert' });
         toast({ title: "✅ Enviado para a OLX!", description: "O anúncio será processado e publicado em alguns minutos." });
       } else {
         toast({ title: "Erro ao publicar na OLX", description: result.error, variant: "destructive" });
@@ -294,11 +299,36 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
     try {
       await unpublishVehicleFromOlx(vehicle.id, vehicle.dealershipId);
       setOlxEnabled(false);
+      setOlxStatus(null);
+      setOlxImportToken(null);
       toast({ title: "Anúncio removido da OLX." });
     } catch (err: any) {
       toast({ title: "Erro ao remover da OLX", description: err.message, variant: "destructive" });
     } finally {
       setIsOLXLoading(false);
+    }
+  };
+
+  const handleCheckOlxStatus = async () => {
+    if (!olxImportToken) return;
+    setIsOlxStatusLoading(true);
+    try {
+      const r = await checkOlxImportStatus(vehicle.dealershipId, vehicle.id, olxImportToken);
+      if (r.success && r.adStatus) {
+        setOlxStatus(r.adStatus);
+        const label =
+          r.adStatus.status === 'accepted' ? 'Anúncio publicado na OLX! 🎉' :
+          r.adStatus.status === 'refused'  ? 'A OLX recusou o anúncio.' :
+          r.adStatus.status === 'error'    ? 'O anúncio está com erros.' :
+          'Ainda em processamento na OLX.';
+        toast({ title: label });
+      } else {
+        toast({ title: "Status OLX", description: r.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao consultar status", description: err.message, variant: "destructive" });
+    } finally {
+      setIsOlxStatusLoading(false);
     }
   };
 
@@ -539,22 +569,67 @@ export function EditVehicleForm({ vehicle }: { vehicle: any }) {
           <CardContent className="space-y-3">
             {olxEnabled ? (
               <>
-                <div className="flex items-center gap-2 text-sm" style={{ color: '#065f46' }}>
-                  <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                  Anúncio enviado à OLX
-                </div>
-                <p className="text-xs" style={{ color: '#45464d' }}>
-                  A OLX processa e publica em alguns minutos após o envio.
-                </p>
-                <a
-                  href="https://www.olx.com.br/minha-conta/meus-anuncios"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs underline"
-                  style={{ color: '#3980f4' }}
-                >
-                  Ver meus anúncios <ExternalLink className="h-3 w-3" />
-                </a>
+                {/* Status badge — driven by webhook AD_STATUS + manual check */}
+                {(() => {
+                  const s = String(olxStatus?.status ?? 'pending').toLowerCase();
+                  const cfg =
+                    s === 'accepted' || s === 'active'
+                      ? { dot: '#22c55e', text: '#065f46', label: 'Publicado na OLX' }
+                    : s === 'refused' || s === 'rejected'
+                      ? { dot: '#ef4444', text: '#7f1d1d', label: 'Recusado pela OLX' }
+                    : s === 'error'
+                      ? { dot: '#ef4444', text: '#7f1d1d', label: 'Anúncio com erros' }
+                    : { dot: '#f59e0b', text: '#92400e', label: 'Em processamento na OLX' };
+                  return (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: cfg.text }}>
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
+                        {cfg.label}
+                      </div>
+                      {olxImportToken && (
+                        <button
+                          type="button"
+                          onClick={handleCheckOlxStatus}
+                          disabled={isOlxStatusLoading}
+                          title="Atualizar status"
+                          className="rounded p-1 transition-colors hover:bg-gray-100"
+                          style={{ color: '#45464d' }}
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${isOlxStatusLoading ? 'animate-spin' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Error/refusal details from OLX */}
+                {Array.isArray(olxStatus?.messages) && olxStatus.messages.length > 0 && (
+                  <ul className="text-xs space-y-0.5 rounded border p-2" style={{ borderColor: '#fde8e8', backgroundColor: '#fff8f8', color: '#7f1d1d' }}>
+                    {olxStatus.messages.map((m: string) => <li key={m}>· {m}</li>)}
+                  </ul>
+                )}
+
+                {olxStatus?.url ? (
+                  <a
+                    href={olxStatus.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs underline"
+                    style={{ color: '#3980f4' }}
+                  >
+                    Ver anúncio na OLX <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <a
+                    href="https://www.olx.com.br/minha-conta/meus-anuncios"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs underline"
+                    style={{ color: '#3980f4' }}
+                  >
+                    Ver meus anúncios <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
                 <Button
                   type="button"
                   variant="outline"

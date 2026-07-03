@@ -121,9 +121,19 @@ export interface PublishVehicleToOlxInput {
 }
 
 export interface OlxPublishResult {
-  success: boolean;
-  adId?:   string;
-  error?:  string;
+  success:      boolean;
+  adId?:        string;
+  importToken?: string;
+  error?:       string;
+}
+
+export interface OlxAdStatus {
+  status:     string;        // pending | queued | accepted | refused | error
+  operation?: string;        // insert | edit | delete
+  listId?:    string;
+  url?:       string;        // live ad URL when accepted
+  messages?:  string[];
+  checkedAt?: any;
 }
 
 // ─── Import call helper ──────────────────────────────────────────────────────
@@ -243,9 +253,14 @@ export async function publishVehicleToOlx(v: PublishVehicleToOlxInput): Promise<
       importToken: result.token ?? null,
       publishedAt: new Date(),
     },
+    olxStatus: {
+      status:    'pending',
+      operation: 'insert',
+      checkedAt: new Date(),
+    },
   });
 
-  return { success: true, adId };
+  return { success: true, adId, importToken: result.token ?? undefined };
 }
 
 // ─── Unpublish (delete) ──────────────────────────────────────────────────────
@@ -277,10 +292,19 @@ export async function unpublishVehicleFromOlx(
 
 // ─── Import status check ─────────────────────────────────────────────────────
 
+/**
+ * Queries POST /autoupload/import/{token} and persists the normalized
+ * per-ad status on the vehicle doc (vehicle.olxStatus).
+ *
+ * Response shape per docs:
+ *   { autoupload_status: "done"|"pending",
+ *     ads: { "<adId>": { status, operation, message[], list_id?, url? } } }
+ */
 export async function checkOlxImportStatus(
   dealershipId: string,
+  vehicleId:    string,
   importToken:  string,
-): Promise<{ success: boolean; status?: any; error?: string }> {
+): Promise<{ success: boolean; adStatus?: OlxAdStatus; error?: string }> {
   const token = await getOlxToken(dealershipId);
   if (!token) return { success: false, error: 'OLX não conectado.' };
 
@@ -290,7 +314,42 @@ export async function checkOlxImportStatus(
     body: JSON.stringify({ access_token: token }),
   });
   if (!res.ok) return { success: false, error: `HTTP ${res.status}` };
-  return { success: true, status: await res.json() };
+
+  const data: any = await res.json();
+  const adId  = olxAdId(vehicleId);
+  const entry = data?.ads?.[adId] ?? Object.values(data?.ads ?? {})[0] as any;
+
+  if (!entry) {
+    return { success: false, error: `Sem informação de status ainda (fila: ${data?.autoupload_status ?? '?'}).` };
+  }
+
+  const messages = Array.isArray(entry.message)
+    ? entry.message.filter(Boolean).map(String)
+    : entry.message ? [String(entry.message)] : [];
+
+  const adStatus: OlxAdStatus = {
+    // "accept" appears in the docs alongside "accepted" — normalize
+    status:    String(entry.status ?? 'pending').replace(/^accept$/, 'accepted'),
+    operation: entry.operation ?? undefined,
+    listId:    entry.list_id ? String(entry.list_id) : undefined,
+    url:       entry.url ?? undefined,
+    messages,
+    checkedAt: new Date(),
+  };
+
+  const db = getAdminDb();
+  await db.doc(`vehicles/${vehicleId}`).update({
+    olxStatus: {
+      status:    adStatus.status,
+      ...(adStatus.operation ? { operation: adStatus.operation } : {}),
+      ...(adStatus.listId    ? { listId: adStatus.listId }       : {}),
+      ...(adStatus.url       ? { url: adStatus.url }             : {}),
+      ...(messages.length    ? { messages }                       : {}),
+      checkedAt: new Date(),
+    },
+  });
+
+  return { success: true, adStatus };
 }
 
 // ─── Disconnect ──────────────────────────────────────────────────────────────

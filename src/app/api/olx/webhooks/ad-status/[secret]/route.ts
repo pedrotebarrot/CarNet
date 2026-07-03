@@ -69,13 +69,19 @@ export async function POST(
         (vDoc.data() as any)?.publishedTo?.olx?.adId === olxAdId;
       if (!matches) continue;
 
+      // Normalize reasons/imageErrors into the same `messages` array the
+      // vehicle card renders (matching checkOlxImportStatus output shape).
+      const messages: string[] = [
+        ...(Array.isArray(reasons) ? reasons.map(String) : reasons ? [String(reasons)] : []),
+        ...(Array.isArray(imgErrs) ? imgErrs.map((e: any) => typeof e === 'string' ? e : JSON.stringify(e)) : []),
+      ];
+
       await vDoc.ref.update({
         olxStatus: {
           status,
-          ...(reasons ? { reasons } : {}),
-          ...(imgErrs ? { imageErrors: imgErrs } : {}),
+          ...(messages.length ? { messages } : {}),
           ...(olxAdId ? { adId: olxAdId } : {}),
-          updatedAt: new Date(),
+          checkedAt: new Date(),
           rawPayload: ev,
         },
       });

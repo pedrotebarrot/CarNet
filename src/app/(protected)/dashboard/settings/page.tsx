@@ -305,6 +305,8 @@ export default function SettingsPage() {
                             mlHasRefreshToken={Boolean(dealershipData?.integrations?.mercadolivre?.refreshToken)}
                             mlExpiresAt={dealershipData?.integrations?.mercadolivre?.expiresAt}
                             olxConnected={dealershipData?.integrations?.olx?.connected === true}
+                            olxAccountEmail={dealershipData?.integrations?.olx?.accountEmail}
+                            olxExpiresAt={dealershipData?.integrations?.olx?.expiresAt}
                         />
                     </Suspense>
                 </div>

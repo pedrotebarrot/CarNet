@@ -15,6 +15,18 @@ interface IntegrationsCardProps {
   mlHasRefreshToken?: boolean;
   mlExpiresAt?:   string | Date | null;
   olxConnected:   boolean;
+  olxAccountEmail?: string | null;
+  olxExpiresAt?:  any;
+}
+
+function tsToDate(v: any): Date | null {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (v?.toDate)          return v.toDate();
+  if (v?.seconds  != null) return new Date(v.seconds  * 1000);
+  if (v?._seconds != null) return new Date(v._seconds * 1000);
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export function IntegrationsCard({
@@ -25,6 +37,8 @@ export function IntegrationsCard({
   mlHasRefreshToken,
   mlExpiresAt,
   olxConnected: olxConnectedProp,
+  olxAccountEmail,
+  olxExpiresAt,
 }: IntegrationsCardProps) {
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -144,8 +158,38 @@ export function IntegrationsCard({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm" style={{ color: '#045d30' }}>
                 <CheckCircle2 className="h-4 w-4" style={{ color: '#006d2f' }} />
-                <span>Conta OLX conectada. Novos veículos serão publicados automaticamente.</span>
+                <span>
+                  Conta OLX conectada{olxAccountEmail ? ` (${olxAccountEmail})` : ''}. Novos veículos serão publicados automaticamente.
+                </span>
               </div>
+
+              {/* Session-expiry hint — OLX issues short-lived tokens with no
+                  refresh mechanism, so a stale session needs a manual reconnect. */}
+              {(() => {
+                const exp = tsToDate(olxExpiresAt);
+                const expired = exp ? exp.getTime() < Date.now() : false;
+                if (!expired) return null;
+                return (
+                  <div className="flex items-start gap-2 rounded border p-3 text-xs" style={{ borderColor: '#fde68a', backgroundColor: '#fffbeb' }}>
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+                    <div style={{ color: '#92400e' }} className="flex-1">
+                      <p className="font-semibold mb-1">Sessão com a OLX pode ter expirado</p>
+                      <p className="mb-2">
+                        Se uma publicação falhar por autorização, reconecte a conta — leva 10 segundos e não afeta seus anúncios já publicados.
+                      </p>
+                      <a
+                        href={`/api/olx/connect?dealershipId=${dealershipId}`}
+                        className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 font-semibold text-white transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: '#FF6B00' }}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Reconectar agora
+                      </a>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <button
                 onClick={handleDisconnectOLX}
                 disabled={olxDisconnecting}
