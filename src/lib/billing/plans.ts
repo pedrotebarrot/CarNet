@@ -30,16 +30,32 @@ export interface Plan {
   durationDays:      number;          // How many days each payment cycle covers
   isFounding?:       boolean;         // True for the 15-spot promo plans
   foundingLockDays?: number;          // Days the founding price is locked (365)
+  renewalPricePerMonth?: number;      // Loyalty price after the founding lock (see below)
   visibleOnSite:     boolean;         // Founding plans are hidden from public landing
 }
+
+/**
+ * Founding loyalty price.
+ *
+ * Founding members pay their promo price (R$ 197 anual / R$ 279 mensal) for
+ * the first 12 months. Instead of jumping to full table price at renewal —
+ * an 83% hike that would trigger mass churn on the anniversary — they lock
+ * into this loyalty price FOREVER while their subscription stays active.
+ *
+ * This is a promise made at sale time ("nunca mais que R$ 247, mesmo quando
+ * o preço de tabela for R$ 449"), so the number lives here as the single
+ * source of truth and is surfaced in the admin panel per founding member.
+ */
+export const FOUNDING_LOYALTY_PRICE_PER_MONTH = 247;
+export const FOUNDING_LOYALTY_ANNUAL_UPFRONT  = 247 * 12; // R$ 2.964/ano
 
 export const PLANS: Record<PlanId, Plan> = {
   trial: {
     id:           'trial',
-    label:        'Avaliação gratuita',
+    label:        'Garantia de 7 dias',
     pricePerMonth: 0,
     billing:      'trial',
-    durationDays: 14,
+    durationDays: 7,
     visibleOnSite: true,
   },
   mensal: {
@@ -67,6 +83,7 @@ export const PLANS: Record<PlanId, Plan> = {
     durationDays: 30,
     isFounding:   true,
     foundingLockDays: 365,
+    renewalPricePerMonth: FOUNDING_LOYALTY_PRICE_PER_MONTH,
     visibleOnSite: false,
   },
   founding_anual: {
@@ -78,6 +95,7 @@ export const PLANS: Record<PlanId, Plan> = {
     durationDays: 365,
     isFounding:   true,
     foundingLockDays: 365,
+    renewalPricePerMonth: FOUNDING_LOYALTY_PRICE_PER_MONTH,
     visibleOnSite: false,
   },
 };

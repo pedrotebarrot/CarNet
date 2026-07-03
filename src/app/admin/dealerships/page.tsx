@@ -9,6 +9,7 @@ import {
 import {
   PLANS, type PlanId, type Subscription, toDate, daysRemaining,
   isSubscriptionActive, fmtPrice, FOUNDING_TOTAL_SLOTS,
+  FOUNDING_LOYALTY_PRICE_PER_MONTH, FOUNDING_LOYALTY_ANNUAL_UPFRONT,
 } from '@/lib/billing/plans';
 import {
   markSubscriptionPaid, extendTrial, cancelSubscription,
@@ -35,7 +36,7 @@ function statusBadge(sub: Subscription | undefined) {
   const active = isSubscriptionActive(sub);
   if (sub.status === 'cancelled')     return { label: 'Cancelado', bg: '#f3f4f6', color: '#374151' };
   if (!active)                         return { label: 'Expirado',  bg: '#fef2f2', color: '#7f1d1d' };
-  if (sub.status === 'trial')         return { label: 'Trial',     bg: '#fef3c7', color: '#92400e' };
+  if (sub.status === 'trial')         return { label: 'Garantia',  bg: '#fef3c7', color: '#92400e' };
   return { label: 'Ativo', bg: '#d1fae5', color: '#065f46' };
 }
 
@@ -93,7 +94,7 @@ export default function AdminDealershipsPage() {
 
   const onExtendTrial = (d: DealershipRow, days: number) => {
     run(d.id, () => extendTrial(d.id, days, { callerEmail: user?.email }),
-        `Trial estendido em ${days} dias.`);
+        `Garantia estendida em ${days} dias.`);
   };
 
   const onCancel = (d: DealershipRow) => {
@@ -123,7 +124,7 @@ export default function AdminDealershipsPage() {
         {[
           { label: 'Total',     value: stats.total,     color: '#0b1c30' },
           { label: 'Ativos',    value: stats.active,    color: '#006d2f' },
-          { label: 'Em trial',  value: stats.trial,     color: '#d97706' },
+          { label: 'Em garantia', value: stats.trial,   color: '#d97706' },
           { label: 'Expirados', value: stats.expired,   color: '#dc2626' },
           { label: `Founding (${stats.foundingUsed}/${FOUNDING_TOTAL_SLOTS})`, value: `${FOUNDING_TOTAL_SLOTS - stats.foundingUsed} vagas`, color: '#3980f4' },
         ].map(s => (
@@ -181,6 +182,11 @@ export default function AdminDealershipsPage() {
                           <Sparkles className="h-3 w-3" style={{ color: '#3980f4' }} />
                         )}
                       </div>
+                      {sub && PLANS[sub.planId]?.renewalPricePerMonth && (
+                        <p className="text-[10px] mt-0.5" style={{ color: '#3980f4' }}>
+                          renova a {fmtPrice(PLANS[sub.planId].renewalPricePerMonth!)}/mês
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3" style={{ color: '#0b1c30' }}>{fmtDate(sub?.paidUntil)}</td>
                     <td className="px-4 py-3">
@@ -235,10 +241,35 @@ export default function AdminDealershipsPage() {
                             })}
                           </div>
 
+                          {/* Founding loyalty renewal — only for founding members */}
+                          {sub && PLANS[sub.planId]?.isFounding && (
+                            <div className="border-t p-2" style={{ borderColor: '#f0f4ff' }}>
+                              <p className="px-1 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#3980f4' }}>
+                                Renovação fundador (preço travado)
+                              </p>
+                              <button
+                                onClick={() => onMarkPaid(d, 'founding_anual', FOUNDING_LOYALTY_ANNUAL_UPFRONT)}
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#f0f7ff] rounded"
+                                style={{ color: '#0b1c30' }}
+                              >
+                                <span>Anual · 12 meses</span>
+                                <span className="font-mono" style={{ color: '#3980f4' }}>{fmtPrice(FOUNDING_LOYALTY_ANNUAL_UPFRONT)}</span>
+                              </button>
+                              <button
+                                onClick={() => onMarkPaid(d, 'founding_mensal', FOUNDING_LOYALTY_PRICE_PER_MONTH)}
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#f0f7ff] rounded"
+                                style={{ color: '#0b1c30' }}
+                              >
+                                <span>Mensal</span>
+                                <span className="font-mono" style={{ color: '#3980f4' }}>{fmtPrice(FOUNDING_LOYALTY_PRICE_PER_MONTH)}/mês</span>
+                              </button>
+                            </div>
+                          )}
+
                           {/* Extend trial */}
                           <div className="border-t p-2" style={{ borderColor: '#f0f4ff' }}>
                             <p className="px-1 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#d97706' }}>
-                              Estender trial
+                              Estender garantia
                             </p>
                             <div className="grid grid-cols-2 gap-1">
                               {[7, 14, 30].map(days => (

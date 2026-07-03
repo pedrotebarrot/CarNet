@@ -12,7 +12,7 @@ import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { generateSlug } from '@/lib/utils/slug';
-import { Loader2, Upload, CheckCircle2, Sparkles } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { PLANS } from '@/lib/billing/plans';
 
 export default function SignupPage() {
@@ -77,9 +77,10 @@ export default function SignupPage() {
       const dealershipId = dealershipRef.id;
       const appUrl = window.location.origin;
 
-      // Trial subscription — 14 days starting now. Without this the dealer
-      // would land on the dashboard and immediately hit the SubscriptionGuard
-      // expired screen because there'd be no subscription record at all.
+      // Onboarding window — 7 days starting now. Doubles as the money-back
+      // guarantee period. Without this the dealer would land on the dashboard
+      // and immediately hit the SubscriptionGuard expired screen because
+      // there'd be no subscription record at all.
       const trialDays = PLANS.trial.durationDays;
       const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
 
@@ -99,8 +100,8 @@ export default function SignupPage() {
       });
 
       toast({
-        title: '🎉 Conta criada! Seu trial de 14 dias começou.',
-        description: `Cadastre seu primeiro carro pra ver ele publicado em ${appUrl}/${uniqueSlug}`,
+        title: '🎉 Conta criada! Vamos cadastrar seu primeiro carro.',
+        description: `Seu site já está no ar em ${appUrl}/${uniqueSlug}`,
       });
       router.push('/dashboard');
     } catch (error: any) {
@@ -130,21 +131,21 @@ export default function SignupPage() {
             <p className="mt-1 text-sm" style={{ color: '#45464d' }}>Sua loja na internet em menos de 10 minutos.</p>
           </div>
 
-          {/* Trial benefits banner — sets expectations clearly */}
+          {/* Guarantee banner — sets expectations clearly */}
           <div
             className="mb-6 rounded-lg border p-4"
             style={{ borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4" style={{ color: '#006d2f' }} />
+              <ShieldCheck className="h-4 w-4" style={{ color: '#006d2f' }} />
               <p className="font-headline font-semibold text-sm" style={{ color: '#065f46' }}>
-                14 dias grátis pra testar
+                Garantia de 7 dias
               </p>
             </div>
             <ul className="space-y-1 text-xs" style={{ color: '#065f46' }}>
               <li className="flex items-start gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>Sem cartão de crédito · Sem cobrança automática</span>
+                <span>Contratou e não gostou? Devolvemos 100% do valor</span>
               </li>
               <li className="flex items-start gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -152,7 +153,7 @@ export default function SignupPage() {
               </li>
               <li className="flex items-start gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>Se gostar, ativa a assinatura via Pix</span>
+                <span>Sem fidelidade · Cancele quando quiser</span>
               </li>
             </ul>
           </div>

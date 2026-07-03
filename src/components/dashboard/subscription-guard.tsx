@@ -71,17 +71,17 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
       <div className="flex-1">
         <p className="font-headline font-semibold text-sm" style={{ color: urgent ? '#7f1d1d' : '#92400e' }}>
           {daysLeft === 0
-            ? 'Seu período de teste termina hoje.'
+            ? 'Ative sua conta hoje pra não perder o acesso.'
             : daysLeft === 1
-            ? 'Seu período de teste termina amanhã.'
-            : `Seu período de teste termina em ${daysLeft} dias.`}
+            ? 'Falta 1 dia pra ativar sua conta.'
+            : `Faltam ${daysLeft} dias pra ativar sua conta.`}
         </p>
         <p className="text-xs mt-1" style={{ color: urgent ? '#991b1b' : '#92400e' }}>
-          Para continuar usando depois disso, chama no WhatsApp pra a gente ativar sua assinatura.
+          Chama no WhatsApp pra ativar sua assinatura e manter tudo no ar. Garantia de 7 dias — se não gostar, devolvemos o valor.
         </p>
       </div>
       <a
-        href="https://wa.me/5511967329111?text=Quero%20continuar%20usando%20o%20AutosDigital%20depois%20do%20teste"
+        href="https://wa.me/5511967329111?text=Quero%20ativar%20minha%20assinatura%20do%20AutosDigital"
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90"
@@ -103,11 +103,11 @@ function BlockedScreen({ dealership, sub }: { dealership: any; sub: Subscription
   const wasTrialExpired = sub?.status === 'trial' || sub?.planId === 'trial';
 
   const title = wasTrialExpired
-    ? 'Seu período de teste expirou.'
+    ? 'Falta ativar sua conta.'
     : 'Sua assinatura está pausada.';
 
   const body = wasTrialExpired
-    ? 'Você usou o AutosDigital nos últimos 14 dias. Pra continuar publicando carros e centralizando leads, é só ativar sua assinatura.'
+    ? 'Sua conta foi criada e seu site já está no ar. Pra continuar publicando carros e recebendo leads, é só ativar sua assinatura via Pix. Garantia de 7 dias — se não gostar, devolvemos o valor.'
     : 'O pagamento mais recente venceu. Assim que recebermos o próximo Pix, sua loja volta no ar imediatamente.';
 
   const waText = encodeURIComponent(

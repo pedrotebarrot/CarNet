@@ -127,8 +127,8 @@ const faqs = [
     a: 'Cancela. Sem multa, sem letra miúda, sem "fica mais 3 meses pagando". Pix manual ou cobrança recorrente, a hora que pedir cancelamento, encerra no próximo vencimento.',
   },
   {
-    q: 'Posso testar antes de pagar?',
-    a: 'Sim. 14 dias grátis. Sem cartão de crédito. Cadastra a loja, publica até 3 carros, vê se serve pra você. Se não servir, é só fechar a aba.',
+    q: 'E se eu contratar e não gostar?',
+    a: 'Você tem 7 dias de garantia. Contratou, usou de verdade e não serviu pra sua loja? A gente devolve 100% do valor, sem pergunta e sem burocracia. O risco é todo nosso.',
   },
   {
     q: 'Funciona no meu celular?',
@@ -180,7 +180,7 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 rounded px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#006d2f' }}
             >
-              Testar 14 dias grátis
+              Contratar agora
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -234,7 +234,7 @@ export default function Home() {
                     className="inline-flex items-center gap-2 rounded-lg px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
                     style={{ backgroundColor: '#006d2f', boxShadow: '0 4px 24px rgba(0,109,47,0.35)' }}
                   >
-                    Testar 14 dias grátis
+                    Contratar agora
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
@@ -247,7 +247,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-wrap gap-5">
-                  {['Sem cartão pra testar', 'Sem fidelidade', 'Cancela quando quiser'].map((item) => (
+                  {['Garantia de 7 dias', 'Sem fidelidade', 'Cancela quando quiser'].map((item) => (
                     <div key={item} className="flex items-center gap-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
                       <CheckCircle2 className="h-4 w-4" style={{ color: '#4ade80' }} />
                       {item}
@@ -638,7 +638,7 @@ export default function Home() {
                   className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ backgroundColor: '#131b2e' }}
                 >
-                  Criar minha conta grátis
+                  Criar minha conta
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -710,7 +710,7 @@ export default function Home() {
                   className="flex items-center justify-center gap-2 w-full rounded-lg py-3 text-sm font-semibold transition-colors hover:bg-[#eff4ff]"
                   style={{ border: '1.5px solid #3980f4', color: '#3980f4' }}
                 >
-                  Começar testar grátis
+                  Contratar mensal
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -766,9 +766,20 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Money-back guarantee */}
+            <div
+              className="mx-auto mt-8 max-w-xl rounded-lg border px-5 py-4 flex items-center gap-3"
+              style={{ borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }}
+            >
+              <ShieldCheck className="h-6 w-6 shrink-0" style={{ color: '#006d2f' }} />
+              <p className="text-sm" style={{ color: '#065f46' }}>
+                <strong>Garantia de 7 dias.</strong> Contratou, usou de verdade e não serviu? Devolvemos 100% do valor. O risco é todo nosso.
+              </p>
+            </div>
+
             {/* ROI note */}
             <div
-              className="mx-auto mt-8 max-w-xl rounded-lg border px-5 py-4 text-center"
+              className="mx-auto mt-4 max-w-xl rounded-lg border px-5 py-4 text-center"
               style={{ borderColor: '#e5eeff', backgroundColor: '#f0f7ff' }}
             >
               <p className="text-sm" style={{ color: '#0b1c30' }}>
@@ -840,18 +851,18 @@ export default function Home() {
               Sua revenda na internet em <span style={{ color: '#6fa3f7' }}>10 minutos.</span>
             </h2>
             <p className="text-lg mb-10 max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              Crie sua conta grátis. Cadastre o primeiro carro. Veja ele publicado em todo lugar antes do café da tarde.
+              Crie sua conta. Cadastre o primeiro carro. Veja ele publicado em todo lugar antes do café da tarde.
             </p>
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 rounded-lg px-10 py-4 text-base font-bold text-white transition-all hover:scale-[1.02] hover:shadow-2xl"
               style={{ backgroundColor: '#006d2f', boxShadow: '0 4px 28px rgba(0,109,47,0.4)' }}
             >
-              Testar 14 dias grátis
+              Contratar agora
               <ArrowRight className="h-5 w-5" />
             </Link>
             <p className="mt-4 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Sem cartão de crédito · Sem fidelidade · Suporte humano por WhatsApp
+              Garantia de 7 dias · Sem fidelidade · Suporte humano por WhatsApp
             </p>
           </div>
         </section>
