@@ -116,7 +116,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
                                                     <img
                                                         src={img}
                                                         alt={`${vehicle.make} ${vehicle.model} — foto ${i + 1}`}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-contain"
                                                     />
                                                 </div>
                                             </CarouselItem>
