@@ -3,10 +3,11 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MoreHorizontal, Sparkles, Edit, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, Sparkles, Edit, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
@@ -50,13 +51,14 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
-  
+  const [search, setSearch] = useState('');
+
   const { toast } = useToast();
   const firestore = useFirestore();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(vehicles.map((v) => v.id));
+      setSelectedIds(filteredVehicles.map((v) => v.id));
     } else {
       setSelectedIds([]);
     }
@@ -114,8 +116,17 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
     return <ArrowDown className="ml-2 h-4 w-4" />;
   };
 
+  const filteredVehicles = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return vehicles;
+    return vehicles.filter(v =>
+      `${v.make} ${v.model}`.toLowerCase().includes(term) ||
+      v.plate?.toLowerCase().includes(term)
+    );
+  }, [vehicles, search]);
+
   const sortedVehicles = useMemo(() => {
-    let sortableItems = [...vehicles];
+    let sortableItems = [...filteredVehicles];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         const direction = sortConfig.direction === 'asc' ? 1 : -1;
@@ -136,10 +147,28 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
       });
     }
     return sortableItems;
-  }, [vehicles, sortConfig]);
+  }, [filteredVehicles, sortConfig]);
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por marca, modelo ou placa..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-9"
+          />
+        </div>
+        {search && (
+          <span className="text-sm text-muted-foreground shrink-0">
+            {filteredVehicles.length} resultado{filteredVehicles.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       {selectedIds.length > 0 && (
         <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
           <span className="text-sm font-medium">
@@ -165,8 +194,8 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40px]">
-              <Checkbox 
-                checked={vehicles.length > 0 && selectedIds.length === vehicles.length}
+              <Checkbox
+                checked={filteredVehicles.length > 0 && selectedIds.length === filteredVehicles.length}
                 onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
                 aria-label="Selecionar todos"
               />
@@ -197,6 +226,13 @@ export function VehicleTable({ vehicles }: { vehicles: Vehicle[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          {sortedVehicles.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-10 text-sm text-muted-foreground">
+                Nenhum veículo encontrado para "{search}".
+              </TableCell>
+            </TableRow>
+          )}
           {sortedVehicles.map((vehicle) => (
             <TableRow key={vehicle.id} data-state={selectedIds.includes(vehicle.id) ? "selected" : undefined}>
               <TableCell>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Gauge, Fuel, Settings2, CalendarDays, Search, ArrowUpDown } from 'lucide-react';
+import { Gauge, Fuel, Settings2, CalendarDays, Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type BrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -72,9 +72,12 @@ function formatMileage(km: number) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 12;
+
 export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = DEFAULT_PALETTE }: VehicleGridProps) {
   const [sort,   setSort]   = useState('default');
   const [search, setSearch] = useState('');
+  const [page,   setPage]   = useState(1);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -87,6 +90,10 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
       : vehicles;
     return sortVehicles(base, sort);
   }, [vehicles, sort, search]);
+
+  const totalPages   = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage  = Math.min(page, totalPages);
+  const paginated    = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div>
@@ -109,7 +116,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
               type="text"
               placeholder="Buscar marca ou modelo..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
               className="w-full rounded border pl-8 pr-3 py-2 text-sm outline-none focus:ring-2"
               style={{ borderColor: palette.border, backgroundColor: '#fff', color: '#0b1c30' }}
             />
@@ -120,7 +127,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
             <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#45464d' }} />
             <select
               value={sort}
-              onChange={e => setSort(e.target.value)}
+              onChange={e => { setSort(e.target.value); setPage(1); }}
               className="appearance-none rounded border pl-8 pr-8 py-2 text-sm outline-none focus:ring-2 cursor-pointer"
               style={{ borderColor: palette.border, backgroundColor: '#fff', color: '#0b1c30' }}
             >
@@ -156,7 +163,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((vehicle) => (
+          {paginated.map((vehicle) => (
             <div
               key={vehicle.id}
               className="group relative flex flex-col bg-white rounded-lg border overflow-hidden transition-all duration-200 hover:shadow-md"
@@ -246,6 +253,33 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Pagination ───────────────────────────────────────────── */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="inline-flex items-center gap-1 rounded border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white"
+            style={{ borderColor: palette.border, color: '#0b1c30' }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Anterior
+          </button>
+          <span className="text-sm" style={{ color: '#45464d' }}>
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="inline-flex items-center gap-1 rounded border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white"
+            style={{ borderColor: palette.border, color: '#0b1c30' }}
+          >
+            Próxima
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>
