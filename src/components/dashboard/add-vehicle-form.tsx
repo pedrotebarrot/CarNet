@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { vehicleMakes, vehicleModels, getYears, VehicleMake, vehicleTransmissions } from '@/lib/vehicle-data';
 import { getVehicleInfoFromPlate } from '@/ai/flows/get-vehicle-info-from-plate';
 import { generateVehicleDescription } from '@/ai/flows/generate-vehicle-description';
-import { compressImage, MAX_IMAGE_SIZE_BYTES, IMAGE_ACCEPT } from '@/lib/utils/compress-image';
+import { compressImage, isHeic, convertHeicToJpeg, MAX_IMAGE_SIZE_BYTES, IMAGE_ACCEPT } from '@/lib/utils/compress-image';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -56,6 +56,33 @@ export function AddVehicleForm() {
   const [previewItems, setPreviewItems] = useState<PhotoItem[]>([]);
   const [fileMap] = useState<Map<string, File>>(new Map());
   const { toast } = useToast();
+
+  // HEIC previews are converted to JPEG up front — browsers can't render HEIC
+  // in an <img>, so without this the thumbnail would show as broken as soon
+  // as the file is picked, even though the final upload would've worked.
+  const addPhotoFiles = async (files: FileList | File[]) => {
+    const incoming = Array.from(files);
+    const newItems: PhotoItem[] = [];
+    for (const raw of incoming) {
+      if (raw.size > MAX_IMAGE_SIZE_BYTES) {
+        toast({ title: `"${raw.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
+        continue;
+      }
+      let file = raw;
+      if (isHeic(raw)) {
+        try {
+          file = await convertHeicToJpeg(raw);
+        } catch {
+          toast({ title: `"${raw.name}" ignorada`, description: 'Não foi possível ler este arquivo HEIC.', variant: 'destructive' });
+          continue;
+        }
+      }
+      const id = `${Date.now()}-${Math.random()}`;
+      fileMap.set(id, file);
+      newItems.push({ id, src: URL.createObjectURL(file) });
+    }
+    setPreviewItems(prev => [...prev, ...newItems]);
+  };
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -647,17 +674,7 @@ export function AddVehicleForm() {
                 className="hidden"
                 onChange={(e) => {
                   if (!e.target.files?.length) return;
-                  const newItems: PhotoItem[] = [];
-                  Array.from(e.target.files).forEach(file => {
-                    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-                      toast({ title: `"${file.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
-                      return;
-                    }
-                    const id = `${Date.now()}-${Math.random()}`;
-                    fileMap.set(id, file);
-                    newItems.push({ id, src: URL.createObjectURL(file) });
-                  });
-                  setPreviewItems(prev => [...prev, ...newItems]);
+                  addPhotoFiles(e.target.files);
                 }}
               />
             </label>
@@ -665,19 +682,7 @@ export function AddVehicleForm() {
             <SortablePhotoGrid
               items={previewItems}
               onChange={setPreviewItems}
-              onAddMore={(files) => {
-                const newItems: PhotoItem[] = [];
-                Array.from(files).forEach(file => {
-                  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-                    toast({ title: `"${file.name}" ignorada`, description: 'Arquivo acima de 20 MB.', variant: 'destructive' });
-                    return;
-                  }
-                  const id = `${Date.now()}-${Math.random()}`;
-                  fileMap.set(id, file);
-                  newItems.push({ id, src: URL.createObjectURL(file) });
-                });
-                setPreviewItems(prev => [...prev, ...newItems]);
-              }}
+              onAddMore={(files) => addPhotoFiles(files)}
               accept={IMAGE_ACCEPT}
             />
           )}

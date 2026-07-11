@@ -1,7 +1,7 @@
 /** Browsers don't decode HEIC/HEIF natively (only some Safari versions do),
  * so <img>/canvas silently fails on it. Android/Chrome also often reports
  * an empty MIME type for HEIC files, so we fall back to the extension. */
-function isHeic(file: File): boolean {
+export function isHeic(file: File): boolean {
   const type = file.type.toLowerCase();
   if (type === 'image/heic' || type === 'image/heif') return true;
   if (!type) return /\.hei[cf]$/i.test(file.name);
@@ -11,7 +11,7 @@ function isHeic(file: File): boolean {
 // heic2any's bundled libheif build is stale and rejects some modern iPhone
 // HEIC variants (e.g. 10-bit HDR photos) with "format not supported", so we
 // decode with libheif-js instead — it tracks upstream libheif releases.
-async function convertHeicToJpeg(file: File): Promise<File> {
+export async function convertHeicToJpeg(file: File): Promise<File> {
   const mod = await import('libheif-js/wasm-bundle');
   const libheif = await ((mod as { default?: unknown }).default ?? mod);
   const decoder = new (libheif as any).HeifDecoder();
