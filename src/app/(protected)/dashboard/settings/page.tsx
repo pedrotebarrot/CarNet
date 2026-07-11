@@ -18,6 +18,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 import { BrandColorsCard } from '@/components/dashboard/brand-colors-card';
+import { SellersCard } from '@/components/dashboard/sellers-card';
 
 const BR_STATES = [
   { id: 'BR-AC', name: 'Acre' }, { id: 'BR-AL', name: 'Alagoas' }, { id: 'BR-AP', name: 'Amapá' },
@@ -283,6 +284,22 @@ export default function SettingsPage() {
                         dealershipId={userData.dealershipId}
                         logoUrl={dealershipData.logoUrl}
                         savedColor={dealershipData.brandColors?.primary}
+                    />
+                </div>
+            )}
+
+            {/* ── Vendedores ──────────────────────────────────────── */}
+            {dealershipData && userData?.dealershipId && (
+                <div>
+                    <h4 className="font-headline font-semibold text-base mb-1" style={{ color: '#0b1c30' }}>
+                        Vendedores
+                    </h4>
+                    <p className="text-sm mb-4" style={{ color: '#45464d' }}>
+                        Cadastre os vendedores da loja para o cliente escolher com quem falar no WhatsApp.
+                    </p>
+                    <SellersCard
+                        dealershipId={userData.dealershipId}
+                        savedSellers={dealershipData.sellers}
                     />
                 </div>
             )}

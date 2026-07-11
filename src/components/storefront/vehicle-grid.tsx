@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Gauge, Fuel, Settings2, CalendarDays, Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type BrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
+import { WhatsAppContact, type Seller } from '@/components/storefront/whatsapp-contact';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,8 @@ interface Vehicle {
 interface VehicleGridProps {
   vehicles: Vehicle[];
   dealershipSlug: string;
-  whatsappBase: string | null;
+  sellers?: Seller[];
+  dealershipPhone?: string | null;
   palette?: BrandPalette;
 }
 
@@ -74,7 +76,7 @@ function formatMileage(km: number) {
 
 const PAGE_SIZE = 12;
 
-export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = DEFAULT_PALETTE }: VehicleGridProps) {
+export function VehicleGrid({ vehicles, dealershipSlug, sellers, dealershipPhone, palette = DEFAULT_PALETTE }: VehicleGridProps) {
   const [sort,   setSort]   = useState('default');
   const [search, setSearch] = useState('');
   const [page,   setPage]   = useState(1);
@@ -239,17 +241,15 @@ export function VehicleGrid({ vehicles, dealershipSlug, whatsappBase, palette = 
                 </div>
 
                 {/* CTA */}
-                {whatsappBase && (
-                  <a
-                    href={`${whatsappBase}?text=${encodeURIComponent(`Olá! Vi o anúncio do ${vehicle.make} ${vehicle.model} no site e gostaria de mais informações.`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative z-10 pointer-events-auto mt-auto w-full text-center py-2.5 rounded font-semibold text-white text-sm transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#006d2f' }}
-                  >
-                    Tenho Interesse
-                  </a>
-                )}
+                <WhatsAppContact
+                  sellers={sellers}
+                  fallbackPhone={dealershipPhone}
+                  message={`Olá! Vi o anúncio do ${vehicle.make} ${vehicle.model} no site e gostaria de mais informações.`}
+                  className="relative z-10 pointer-events-auto mt-auto w-full text-center py-2.5 rounded font-semibold text-white text-sm transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: '#006d2f' }}
+                >
+                  Tenho Interesse
+                </WhatsAppContact>
               </div>
             </div>
           ))}
