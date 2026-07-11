@@ -179,7 +179,7 @@ export function VehicleGrid({ vehicles, dealershipSlug, sellers, dealershipPhone
               />
 
               {/* Image */}
-              <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: palette.light }}>
+              <div className="aspect-video relative overflow-hidden pointer-events-none" style={{ backgroundColor: palette.light }}>
                 {(vehicle.featuredImage ?? vehicle.images?.[0]) ? (
                   <img
                     src={(vehicle.featuredImage ?? vehicle.images?.[0])!}
