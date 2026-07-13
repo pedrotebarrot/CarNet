@@ -4,6 +4,7 @@ import { firebaseConfig } from '@/firebase/config';
 import { notFound } from 'next/navigation';
 import { VehicleGrid } from '@/components/storefront/vehicle-grid';
 import { WhatsAppContact, type Seller } from '@/components/storefront/whatsapp-contact';
+import { GoogleAdsTag } from '@/components/storefront/google-ads-tag';
 import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 import { MapPin, Phone, Clock, ShieldCheck, Car, Sparkles } from 'lucide-react';
 
@@ -60,6 +61,7 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#f8f9ff', color: '#0b1c30' }}>
+            <GoogleAdsTag dealershipSlug={dealership.slug} />
 
             {/* ── Header ─────────────────────────────────────────────── */}
             <header style={{ backgroundColor: palette.header }} className="sticky top-0 z-50 shadow-lg">

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 import { WhatsAppContact, type Seller } from '@/components/storefront/whatsapp-contact';
+import { GoogleAdsTag } from '@/components/storefront/google-ads-tag';
 
 export const revalidate = 60;
 
@@ -68,6 +69,7 @@ export default async function VehicleDetailsPage({ params }: { params: Promise<{
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#f8f9ff', color: '#0b1c30' }}>
+            <GoogleAdsTag dealershipSlug={dealership.slug} />
 
             {/* ── Header ─────────────────────────────────────────────── */}
             <header style={{ backgroundColor: palette.header }} className="sticky top-0 z-50 shadow-lg">
