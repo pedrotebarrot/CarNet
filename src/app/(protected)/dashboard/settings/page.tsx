@@ -19,6 +19,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 import { BrandColorsCard } from '@/components/dashboard/brand-colors-card';
 import { SellersCard } from '@/components/dashboard/sellers-card';
+import { SITE_URL } from '@/lib/site-url';
 
 const BR_STATES = [
   { id: 'BR-AC', name: 'Acre' }, { id: 'BR-AL', name: 'Alagoas' }, { id: 'BR-AP', name: 'Amapá' },
@@ -251,7 +252,7 @@ export default function SettingsPage() {
                                     <div>
                                         <p className="text-sm font-medium" style={{ color: '#0b1c30' }}>Link da sua loja:</p>
                                         <p className="font-mono text-sm mt-0.5" style={{ color: '#3980f4' }}>
-                                            {typeof window !== 'undefined' ? `${window.location.origin}/${dealershipData.slug}` : `/${dealershipData.slug}`}
+                                            {SITE_URL}/{dealershipData.slug}
                                         </p>
                                     </div>
                                     <a href={`/${dealershipData.slug}`} target="_blank" rel="noopener noreferrer"

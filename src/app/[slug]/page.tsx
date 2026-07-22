@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
@@ -6,17 +8,40 @@ import { VehicleGrid } from '@/components/storefront/vehicle-grid';
 import { WhatsAppContact, type Seller } from '@/components/storefront/whatsapp-contact';
 import { GoogleAdsTag } from '@/components/storefront/google-ads-tag';
 import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
+import { SITE_URL } from '@/lib/site-url';
 import { MapPin, Phone, Clock, ShieldCheck, Car, Sparkles } from 'lucide-react';
 
 export const revalidate = 300;
 
-async function getDealership(slug: string) {
+const getDealership = cache(async (slug: string) => {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const firestore = getFirestore(app);
     const q = query(collection(firestore, 'dealerships'), where('slug', '==', slug), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
+});
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const dealership = await getDealership(slug);
+    if (!dealership) return {};
+
+    const cityPart = dealership.city ? ` em ${dealership.city}` : '';
+    const title = `${dealership.name} — Carros e veículos à venda${cityPart}`;
+    const description = `Confira o estoque de veículos da ${dealership.name}${cityPart}. Carros seminovos com procedência garantida, atendimento direto pelo WhatsApp.`;
+
+    return {
+        title,
+        description,
+        alternates: { canonical: `${SITE_URL}/${slug}` },
+        openGraph: {
+            title,
+            description,
+            url: `${SITE_URL}/${slug}`,
+            images: dealership.logoUrl ? [dealership.logoUrl] : undefined,
+        },
+    };
 }
 
 async function getVehicles(dealershipId: string) {

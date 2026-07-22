@@ -13,14 +13,13 @@ import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist
 
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
+import { SITE_URL } from '@/lib/site-url';
 
 // ── Store link banner ─────────────────────────────────────────────────────────
 
 function StoreLinkBanner({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false);
-  const storeUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/${slug}`
-    : `https://autosdigital.vercel.app/${slug}`;
+  const storeUrl = `${SITE_URL}/${slug}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(storeUrl);

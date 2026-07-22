@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, limit } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
@@ -14,25 +16,49 @@ import {
 import { buildBrandPalette, DEFAULT_PALETTE } from '@/lib/utils/colors';
 import { WhatsAppContact, type Seller } from '@/components/storefront/whatsapp-contact';
 import { GoogleAdsTag } from '@/components/storefront/google-ads-tag';
+import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 60;
 
-async function getDealership(slug: string) {
+const getDealership = cache(async (slug: string) => {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const firestore = getFirestore(app);
     const q = query(collection(firestore, 'dealerships'), where('slug', '==', slug), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
-}
+});
 
-async function getVehicle(vehicleId: string) {
+const getVehicle = cache(async (vehicleId: string) => {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const firestore = getFirestore(app);
     const docRef = doc(firestore, 'vehicles', vehicleId);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
     return { id: docSnap.id, ...docSnap.data() } as any;
+});
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; vehicleId: string }> }): Promise<Metadata> {
+    const { slug, vehicleId } = await params;
+    const dealership = await getDealership(slug);
+    const vehicle = await getVehicle(vehicleId);
+    if (!dealership || !vehicle) return {};
+
+    const cityPart = dealership.city ? ` em ${dealership.city}` : '';
+    const title = `${vehicle.make} ${vehicle.model} ${vehicle.year}/${vehicle.modelYear} — ${dealership.name}`;
+    const description = `${vehicle.make} ${vehicle.model} ${vehicle.year}/${vehicle.modelYear}, ${new Intl.NumberFormat('pt-BR').format(vehicle.mileage)} km, ${vehicle.color}. À venda na ${dealership.name}${cityPart}.`;
+
+    return {
+        title,
+        description,
+        alternates: { canonical: `${SITE_URL}/${slug}/${vehicleId}` },
+        openGraph: {
+            title,
+            description,
+            url: `${SITE_URL}/${slug}/${vehicleId}`,
+            images: vehicle.images?.[0] ? [vehicle.images[0]] : undefined,
+        },
+    };
 }
 
 function formatPrice(cents: number) {

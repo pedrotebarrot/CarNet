@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateSlug } from '@/lib/utils/slug';
 import { Loader2, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { PLANS } from '@/lib/billing/plans';
+import { SITE_URL } from '@/lib/site-url';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -75,7 +76,7 @@ export default function SignupPage() {
 
       const dealershipRef = doc(collection(firestore, 'dealerships'));
       const dealershipId = dealershipRef.id;
-      const appUrl = window.location.origin;
+      const appUrl = SITE_URL;
 
       // Onboarding window — 7 days starting now. Doubles as the money-back
       // guarantee period. Without this the dealer would land on the dashboard
