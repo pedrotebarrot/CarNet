@@ -200,7 +200,7 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
             </main>
 
             {/* ── Contact section ─────────────────────────────────────── */}
-            <section className="border-t" style={{ borderColor: '#e5eeff', backgroundColor: '#fff' }}>
+            <section id="contato" className="border-t scroll-mt-24" style={{ borderColor: '#e5eeff', backgroundColor: '#fff' }}>
                 <div className="mx-auto max-w-[1280px] px-4 md:px-16 py-10 md:py-14">
                     <div className="grid md:grid-cols-2 gap-10 items-start">
                         <div>
